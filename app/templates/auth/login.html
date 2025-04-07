@@ -1,0 +1,49 @@
+{% extends 'base.html' %} {% block title %}登录 - 提示词管理平台{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card-form">
+      <h2 class="text-center mb-4">登录</h2>
+
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          {{ form.email.label(class="form-label") }} {% if form.email.errors %}
+          {{ form.email(class="form-control is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.email.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.email(class="form-control") }} {% endif %}
+        </div>
+
+        <div class="mb-3">
+          {{ form.password.label(class="form-label") }} {% if
+          form.password.errors %} {{ form.password(class="form-control
+          is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.password.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.password(class="form-control") }} {% endif %}
+        </div>
+
+        <div class="mb-3 form-check">
+          {{ form.remember_me(class="form-check-input") }} {{
+          form.remember_me.label(class="form-check-label") }}
+        </div>
+
+        <div class="d-grid gap-2">
+          {{ form.submit(class="btn btn-primary") }}
+        </div>
+      </form>
+
+      <div class="text-center mt-4">
+        <p>
+          还没有账号？
+          <a href="{{ url_for('auth.register') }}">立即注册</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

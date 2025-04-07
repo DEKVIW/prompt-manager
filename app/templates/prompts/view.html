@@ -1,0 +1,170 @@
+{% extends 'base.html' %} {% block title %}{{ prompt.title }} - 提示词管理平台{%
+endblock %} {% block content %}
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="{{ url_for('main.index') }}">首页</a>
+        </li>
+        {% if prompt.user_id == current_user.id %}
+        <li class="breadcrumb-item">
+          <a href="{{ url_for('prompts.my_prompts') }}">我的提示词</a>
+        </li>
+        {% endif %}
+        <li class="breadcrumb-item active" aria-current="page">
+          {{ prompt.title }}
+        </li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <h1 class="mb-3">{{ prompt.title }}</h1>
+
+    <div class="d-flex align-items-center mb-4">
+      <div class="me-auto">
+        <span class="badge bg-primary">v{{ prompt.version }}</span>
+        {% if prompt.is_public %}
+        <span class="badge bg-success">公开</span>
+        {% else %}
+        <span class="badge bg-secondary">私有</span>
+        {% endif %}
+        <span class="text-muted ms-2"
+          >创建于 {{ prompt.created_at.strftime('%Y-%m-%d') }}</span
+        >
+      </div>
+
+      {% if prompt.user_id == current_user.id %}
+      <div class="btn-group" role="group">
+        <a
+          href="{{ url_for('prompts.edit', id=prompt.id) }}"
+          class="btn btn-sm btn-outline-primary prompt-action-btn"
+        >
+          <i class="bi bi-pencil"></i> 编辑
+        </a>
+        <form
+          action="{{ url_for('prompts.delete', id=prompt.id) }}"
+          method="post"
+          class="d-inline"
+        >
+          <button
+            type="submit"
+            class="btn btn-sm btn-outline-danger prompt-action-btn btn-delete-prompt"
+          >
+            <i class="bi bi-trash"></i> 删除
+          </button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if prompt.cover_image %}
+    <img
+      src="{{ prompt.cover_image }}"
+      class="img-fluid prompt-cover"
+      alt="{{ prompt.title }}"
+    />
+    {% endif %} {% if prompt.description %}
+    <div class="mb-4">
+      <h5>描述</h5>
+      <p>{{ prompt.description }}</p>
+    </div>
+    {% endif %}
+
+    <div class="mb-4">
+      <h5>标签</h5>
+      <div>
+        {% for tag in prompt.tags.all() %}
+        <a href="{{ url_for('main.search', tag=tag.name) }}" class="prompt-tag"
+          >{{ tag.name }}</a
+        >
+        {% else %}
+        <span class="text-muted">无标签</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <div class="d-flex justify-content-between mb-2">
+        <h5>提示词内容</h5>
+        <button
+          class="btn btn-sm btn-outline-primary btn-copy"
+          data-copy-target="prompt-content-text"
+        >
+          <i class="bi bi-clipboard"></i> 复制
+        </button>
+      </div>
+      <div class="prompt-content" id="prompt-content-text">
+        {{ prompt.content }}
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <button
+        class="btn btn-outline-primary btn-share"
+        data-prompt-id="{{ prompt.id }}"
+      >
+        <i class="bi bi-share"></i> 分享
+      </button>
+      <span class="text-muted ms-2">已分享 {{ prompt.share_count }} 次</span>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="prompt-metadata mb-4">
+      <h5 class="mb-3">元数据</h5>
+      <table class="table table-sm">
+        <tbody>
+          <tr>
+            <th>作者</th>
+            <td>{{ prompt.author.username }}</td>
+          </tr>
+          <tr>
+            <th>创建时间</th>
+            <td>{{ prompt.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          </tr>
+          <tr>
+            <th>最后更新</th>
+            <td>{{ prompt.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          </tr>
+          <tr>
+            <th>版本</th>
+            <td>{{ prompt.version }}</td>
+          </tr>
+          <tr>
+            <th>可见性</th>
+            <td>{{ '公开' if prompt.is_public else '私有' }}</td>
+          </tr>
+          <tr>
+            <th>查看次数</th>
+            <td>{{ prompt.view_count }}</td>
+          </tr>
+          <tr>
+            <th>分享次数</th>
+            <td>{{ prompt.share_count }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {% if prompt.metadata %}
+    <div class="prompt-metadata">
+      <h5 class="mb-3">自定义元数据</h5>
+      <table class="table table-sm">
+        <tbody>
+          {% for key, value in prompt.metadata.items() %}
+          <tr>
+            <th>{{ key }}</th>
+            <td>{{ value }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

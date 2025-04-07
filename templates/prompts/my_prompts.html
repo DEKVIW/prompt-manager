@@ -1,0 +1,257 @@
+{% extends 'base.html' %} {% block title %}我的提示词 - 提示词管理平台{%
+endblock %} {% block styles %}
+<style>
+  /* 分页样式优化 */
+  .pagination-container {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .pagination .page-link {
+    color: var(--primary-color);
+    font-weight: 500;
+    background-color: #fff;
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .pagination .page-link:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-light);
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: #adb5bd;
+    background-color: #f8f9fa;
+  }
+
+  .page-info {
+    text-align: center;
+    margin-top: 1rem;
+    color: #6c757d;
+  }
+
+  /* 页面内容容器样式 */
+  .my-prompts-container {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+
+  /* 移动端适配样式 - 仅针对"我的提示词"页面 */
+  .prompt-card-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .prompt-card-actions .btn {
+    min-width: 70px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    .my-prompts-container {
+      padding: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-body {
+      padding: 1rem;
+    }
+
+    .card-footer {
+      padding: 0.75rem 1rem;
+    }
+
+    /* 移动端适配卡片底部样式 */
+    .card-footer .text-muted {
+      font-size: 0.8rem;
+    }
+
+    /* 优化移动端卡片底部布局 */
+    .prompt-card-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start !important;
+    }
+
+    /* 移动端按钮组样式 */
+    .prompt-card-actions {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .prompt-card-actions .btn {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 0.85rem;
+    }
+  }
+
+  /* 超小屏幕适配 */
+  @media (max-width: 375px) {
+    .my-prompts-container {
+      padding: 0.75rem;
+    }
+
+    .card-body {
+      padding: 0.75rem;
+    }
+
+    .card-footer {
+      padding: 0.75rem;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container mt-4 mb-5">
+  <div class="my-prompts-container">
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1 class="mb-0">我的提示词</h1>
+          <a href="/create-prompt" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> 创建提示词
+          </a>
+        </div>
+        <hr />
+      </div>
+    </div>
+
+    {% if prompts %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for prompt in prompts %}
+      <div class="col">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">{{ prompt.title }}</h5>
+            <p class="card-text">{{ prompt.description or '无描述' }}</p>
+            <div class="mt-2 mb-2">
+              <span
+                class="badge {% if prompt.is_public %}bg-success{% else %}bg-secondary{% endif %}"
+              >
+                {% if prompt.is_public %}公开{% else %}私有{% endif %}
+              </span>
+              <small class="text-muted ms-2">版本 {{ prompt.version }}</small>
+            </div>
+            {% if prompt.tags %}
+            <div class="mt-2">
+              {% for tag in prompt.tags %}
+              <span class="tag-pill">{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div
+            class="card-footer d-flex justify-content-between align-items-center prompt-card-footer"
+          >
+            <small class="text-muted">
+              <i class="bi bi-eye me-1"></i> {{ prompt.view_count }} {% if
+              prompt.created_at %}
+              <span class="ms-2">
+                <i class="bi bi-calendar3 me-1"></i> {{ prompt.created_at }}
+              </span>
+              {% endif %}
+            </small>
+            <div class="prompt-card-actions">
+              <a href="/prompts/{{ prompt.id }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-eye d-md-none me-1"></i> 查看
+              </a>
+              <a
+                href="/edit-prompt/{{ prompt.id }}"
+                class="btn btn-sm btn-outline-secondary"
+              >
+                <i class="bi bi-pencil d-md-none me-1"></i> 编辑
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- 分页 -->
+    <div class="pagination-container">
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+            <a
+              class="page-link"
+              href="/my-prompts?page={{ current_page - 1 }}"
+              aria-label="Previous"
+            >
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+
+          {% for i in range(1, total_pages + 1) %} {% if i == current_page %}
+          <li class="page-item active">
+            <span class="page-link">{{ i }}</span>
+          </li>
+          {% elif i == 1 or i == total_pages or (i >= current_page - 2 and i <=
+          current_page + 2) %}
+          <li class="page-item">
+            <a class="page-link" href="/my-prompts?page={{ i }}">{{ i }}</a>
+          </li>
+          {% elif i == current_page - 3 or i == current_page + 3 %}
+          <li class="page-item disabled">
+            <span class="page-link">...</span>
+          </li>
+          {% endif %} {% endfor %}
+
+          <li
+            class="page-item {% if current_page == total_pages %}disabled{% endif %}"
+          >
+            <a
+              class="page-link"
+              href="/my-prompts?page={{ current_page + 1 }}"
+              aria-label="Next"
+            >
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="page-info">
+      显示第 {{ (current_page - 1) * 9 + 1 }} 到 {% if current_page * 9 >
+      total_count %} {{ total_count }} {% else %} {{ current_page * 9 }} {%
+      endif %} 条，共 {{ total_count }} 条
+    </div>
+
+    {% else %}
+    <div class="col-md-12 text-center py-5">
+      <div class="mb-4">
+        <i class="bi bi-emoji-frown" style="font-size: 4rem"></i>
+      </div>
+      <h3>您还没有创建任何提示词</h3>
+      <p>开始创建你的第一个提示词吧！</p>
+      <a href="/create-prompt" class="btn btn-primary mt-3">
+        <i class="bi bi-plus-lg"></i> 创建提示词
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

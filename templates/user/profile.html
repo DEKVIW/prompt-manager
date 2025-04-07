@@ -1,0 +1,380 @@
+{% extends 'base.html' %} {% block title %}{{ profile_user.username }}
+的个人资料 - 提示词管理平台{% endblock %} {% block styles %}
+<style>
+  .profile-container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
+
+  .profile-header {
+    background: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--primary-dark)
+    );
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+
+  .profile-header .avatar {
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .profile-header .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-stats {
+    display: flex;
+    margin-top: 1rem;
+  }
+
+  .stats-item {
+    padding-right: 2rem;
+    margin-right: 2rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .stats-item:last-child {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+  }
+
+  .stats-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 0;
+  }
+
+  .stats-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.2rem;
+  }
+
+  .section-header i {
+    margin-right: 0.5rem;
+    font-size: 1.3rem;
+  }
+
+  .prompt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .prompt-card {
+    height: 100%;
+    border-radius: 0.8rem;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .prompt-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .prompt-card .card-header {
+    background: var(--light-bg);
+    font-weight: bold;
+    padding: 1rem;
+  }
+
+  .tag-pill {
+    background: var(--light-bg);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-color);
+    text-decoration: none;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+    transition: background-color 0.2s;
+  }
+
+  .tag-pill:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+  }
+
+  .empty-message {
+    padding: 3rem;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--light-bg);
+    border-radius: 1rem;
+  }
+
+  .empty-message i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  /* 移动端适配 */
+  @media (max-width: 767.98px) {
+    .profile-container {
+      margin: 1rem auto;
+      padding: 0 10px;
+    }
+
+    .profile-header {
+      padding: 1.5rem 1rem;
+      border-radius: 0.75rem;
+      text-align: center;
+    }
+
+    .profile-header .avatar {
+      width: 100px;
+      height: 100px;
+      font-size: 3rem;
+      margin: 0 auto 1rem;
+    }
+
+    .profile-header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .profile-header p {
+      font-size: 0.9rem;
+    }
+
+    .profile-stats {
+      justify-content: space-around;
+      width: 100%;
+      flex-wrap: nowrap;
+      margin-top: 1.5rem;
+    }
+
+    .stats-item {
+      padding-right: 0;
+      margin-right: 0;
+      border-right: none;
+      flex: 1;
+      text-align: center;
+    }
+
+    .stats-number {
+      font-size: 1.5rem;
+    }
+
+    .stats-label {
+      font-size: 0.8rem;
+    }
+
+    .edit-profile-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .edit-profile-btn i {
+      margin-right: 0;
+    }
+
+    .edit-profile-btn span {
+      display: none;
+    }
+
+    .section-header {
+      font-size: 1.1rem;
+    }
+
+    .prompt-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .card-footer {
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .empty-message {
+      padding: 2rem 1rem;
+    }
+
+    .empty-message i {
+      font-size: 2.5rem;
+    }
+  }
+
+  /* 超小屏幕优化 */
+  @media (max-width: 375px) {
+    .profile-header {
+      padding: 1.25rem 0.75rem;
+    }
+
+    .profile-header .avatar {
+      width: 80px;
+      height: 80px;
+      font-size: 2.5rem;
+    }
+
+    .profile-header h1 {
+      font-size: 1.3rem;
+    }
+
+    .profile-stats {
+      margin-top: 1.25rem;
+    }
+
+    .stats-number {
+      font-size: 1.3rem;
+    }
+
+    .stats-label {
+      font-size: 0.75rem;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="profile-container">
+  <!-- 个人资料头部 -->
+  <div class="profile-header">
+    <div class="row align-items-center">
+      <div class="col-md-2 text-center text-md-start">
+        <div class="avatar mx-auto mx-md-0">
+          {% if profile_user.avatar_url %}
+          <img
+            src="{{ profile_user.avatar_url }}"
+            alt="{{ profile_user.username }}"
+            class="w-100 h-100 rounded-circle object-fit-cover"
+          />
+          {% else %}
+          <i class="bi bi-person"></i>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1 class="mb-1">{{ profile_user.username }}</h1>
+          {% if session.user_id == profile_user.id %}
+          <a
+            href="{{ url_for('edit_profile') }}"
+            class="btn btn-light edit-profile-btn"
+          >
+            <i class="bi bi-pencil me-md-2"></i
+            ><span class="d-none d-md-inline">编辑资料</span>
+          </a>
+          {% endif %}
+        </div>
+        <p><i class="bi bi-envelope me-2"></i>{{ profile_user.email }}</p>
+        <p>
+          <i class="bi bi-calendar3 me-2"></i>注册于 {% if
+          profile_user.created_at %} {{ profile_user.created_at }} {% else %}
+          未知时间 {% endif %}
+        </p>
+
+        <div class="profile-stats">
+          <div class="stats-item">
+            <p class="stats-number">{{ prompts_count }}</p>
+            <p class="stats-label">提示词</p>
+          </div>
+          <div class="stats-item">
+            <p class="stats-number">{{ likes_count }}</p>
+            <p class="stats-label">收藏</p>
+          </div>
+          <div class="stats-item">
+            <p class="stats-number">{{ views_count }}</p>
+            <p class="stats-label">浏览量</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 收藏列表标题 -->
+  <div class="section-header">
+    <i class="bi bi-bookmark-heart"></i> 收藏的提示词
+  </div>
+
+  <!-- 收藏的提示词列表 -->
+  {% if prompts %}
+  <div class="prompt-grid">
+    {% for prompt in prompts %}
+    <div class="card prompt-card">
+      <div
+        class="card-header d-flex justify-content-between align-items-center"
+      >
+        <a
+          href="/prompts/{{ prompt.id }}"
+          class="text-decoration-none stretched-link text-dark"
+        >
+          {{ prompt.title }}
+        </a>
+        {% if prompt.is_public %}
+        <span class="badge bg-success">公开</span>
+        {% else %}
+        <span class="badge bg-secondary">私有</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        <p class="card-text">{{ prompt.description }}</p>
+        <div class="mb-2">
+          {% if prompt.tags %} {% for tag in prompt.tags %}
+          <span class="tag-pill">{{ tag }}</span>
+          {% endfor %} {% endif %}
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="d-flex justify-content-between">
+          <small class="text-muted d-flex align-items-center">
+            <i class="bi bi-person-circle text-primary me-1"></i>
+            <span class="fw-medium">{{ prompt.username }}</span>
+          </small>
+          <small class="text-muted">
+            {% if prompt.updated_at %}
+            <i class="bi bi-pencil-square me-1"></i>更新于 {{ prompt.updated_at
+            }} {% elif prompt.favorited_at %}
+            <i class="bi bi-bookmark-heart me-1"></i>收藏于 {{
+            prompt.favorited_at }} {% elif prompt.created_at %}
+            <i class="bi bi-calendar3 me-1"></i>创建于 {{ prompt.created_at }}
+            {% else %} <i class="bi bi-calendar3 me-1"></i>未知时间 {% endif %}
+          </small>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-message">
+    <i class="bi bi-bookmark-heart"></i>
+    <h3>暂无收藏</h3>
+    <p class="mb-4">您还没有收藏任何提示词</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

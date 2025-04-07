@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Flask
+instance/
+.webassets-cache
+
+# 日志
+logs/
+*.log
+
+# 数据库文件
+*.sqlite
+*.sqlite3
+*.db
+data/*.json
+
+# 上传的文件
+uploads/*
+!uploads/.gitkeep
+
+# 虚拟环境
+venv/
+ENV/
+.env
+
+# Docker相关临时文件
+.dockerignore
+docker-compose.override.yml
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo
+.history/
+.VSCodeCounter/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+*.rej
+
+# 自动生成的API文档
+docs/build/
+docs/_build/
+
+# 本地配置文件
+config.local.py
+app/config.local.py 

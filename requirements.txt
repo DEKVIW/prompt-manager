@@ -1,0 +1,18 @@
+Flask==2.2.5
+Flask-SQLAlchemy==3.1.0
+SQLAlchemy==2.0.23
+Flask-Login==0.6.2
+Flask-WTF==1.1.1
+Flask-Migrate==4.0.4
+email-validator==2.0.0
+Pillow==9.5.0
+python-dotenv==1.0.0
+Werkzeug==2.2.3
+# 生产环境依赖
+gunicorn==21.2.0  # Linux/MacOS生产服务器
+waitress==2.1.2   # Windows生产服务器
+# 安全增强
+Flask-Talisman==1.1.0
+# 指定预编译版本，避免编译问题
+cryptography==39.0.2
+pyOpenSSL==23.2.0 

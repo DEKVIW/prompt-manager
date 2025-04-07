@@ -1,0 +1,170 @@
+/* 全局样式 */
+:root {
+  --primary-color: #4a6bff;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --info-color: #17a2b8;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+/* 导航栏样式 */
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 提示词卡片样式 */
+.prompt-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.prompt-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 16px rgba(0, 0, 0, 0.2);
+}
+
+.prompt-card .card-img-top {
+  height: 180px;
+  object-fit: cover;
+}
+
+.prompt-card .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.prompt-card .card-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+}
+
+.prompt-card .card-text {
+  color: #6c757d;
+  flex: 1;
+}
+
+.prompt-card .card-footer {
+  background-color: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 12px 16px;
+}
+
+/* 标签样式 */
+.prompt-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  margin: 0 4px 4px 0;
+  background-color: rgba(74, 107, 255, 0.1);
+  color: var(--primary-color);
+  border-radius: 30px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.prompt-tag:hover {
+  background-color: rgba(74, 107, 255, 0.2);
+  text-decoration: none;
+}
+
+/* 提示词详情页 */
+.prompt-cover {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.prompt-content {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: monospace;
+  margin-bottom: 24px;
+}
+
+.prompt-metadata {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.prompt-action-btn {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+/* 表单样式 */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(74, 107, 255, 0.25);
+}
+
+.card-form {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .card-form {
+    padding: 24px 16px;
+  }
+}
+
+/* 自定义分页样式 */
+.pagination .page-item.active .page-link {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.pagination .page-link {
+  color: var(--primary-color);
+}
+
+/* 按钮样式 */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #3a5bd9;
+  border-color: #3a5bd9;
+}
+
+/* 页脚样式 */
+.footer {
+  margin-top: auto;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}
