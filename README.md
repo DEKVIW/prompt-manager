@@ -57,6 +57,11 @@ networks:
 docker-compose up -d --build
 ```
 
+**注意：**
+
+1. docker-compose 中随机生成一串密钥补充填写在`- SECRET_KEY=`后面；
+2. 使用`image: yilan666/prompt-manager:1.1`这个镜像部署后的登陆密码是`aaaaaaaa`
+
 ### 优化特性
 
 - **单容器设计**: Nginx 和 Flask 应用在单一容器中运行，简化部署和管理

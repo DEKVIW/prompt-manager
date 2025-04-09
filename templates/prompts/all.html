@@ -524,8 +524,8 @@ endblock %} {% block styles %}
         </div>
 
         <div class="page-info">
-          显示第 {{ (current_page - 1) * 9 + 1 }} 到 {% if current_page * 9 >
-          total_count %}{{ total_count }}{% else %}{{ current_page * 9 }}{%
+          显示第 {{ (current_page - 1) * 10 + 1 }} 到 {% if current_page * 10 >
+          total_count %}{{ total_count }}{% else %}{{ current_page * 10 }}{%
           endif %} 条， 共 {{ total_count }} 条
         </div>
         {% else %}
