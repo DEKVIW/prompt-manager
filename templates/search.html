@@ -1,0 +1,93 @@
+{% extends 'base.html' %} {% block title %}搜索结果 - 提示词管理平台{% endblock
+%} {% block styles %}
+<style>
+  /* 添加容器限制最大宽度 */
+  .search-container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="search-container">
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="mb-0">
+          搜索结果 {% if query or selected_tag %}
+          <small class="text-muted">
+            {% if query %}关键词: "{{ query }}"{% endif %} {% if query and
+            selected_tag %} 和 {% endif %} {% if selected_tag %}标签: "{{
+            selected_tag }}"{% endif %}
+          </small>
+          {% endif %}
+        </h1>
+        {% if session.user_id %}
+        <a href="/create-prompt" class="btn btn-primary">
+          <i class="bi bi-plus-lg"></i> 创建提示词
+        </a>
+        {% endif %}
+      </div>
+      <hr />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for prompt in prompts %}
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">{{ prompt.title }}</h5>
+              <p class="card-text">{{ prompt.description or '无描述' }}</p>
+              <div class="mt-2 mb-2">
+                <span
+                  class="badge {% if prompt.is_public %}bg-success{% else %}bg-secondary{% endif %}"
+                >
+                  {% if prompt.is_public %}公开{% else %}私有{% endif %}
+                </span>
+                <small class="text-muted ms-2">版本 {{ prompt.version }}</small>
+              </div>
+            </div>
+            <div
+              class="card-footer d-flex justify-content-between align-items-center"
+            >
+              <small class="text-muted">作者: {{ prompt.username }}</small>
+              <a href="/prompts/{{ prompt.id }}" class="btn btn-sm btn-primary"
+                >查看</a
+              >
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="col-md-12 text-center py-5">
+          <div class="mb-4">
+            <i class="bi bi-search" style="font-size: 4rem"></i>
+          </div>
+          <h3>未找到匹配的提示词</h3>
+          <p>尝试更改搜索条件或浏览其他提示词</p>
+          <a href="/" class="btn btn-primary mt-3">
+            <i class="bi bi-house"></i> 返回首页
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tagFilters = document.querySelectorAll(".tag-filter");
+    const searchForm = document.querySelector("form");
+
+    // 监听标签筛选器变化
+    tagFilters.forEach((filter) => {
+      filter.addEventListener("change", function () {
+        searchForm.submit();
+      });
+    });
+  });
+</script>
+{% endblock %}

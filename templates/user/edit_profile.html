@@ -1,0 +1,449 @@
+{% extends 'base.html' %} {% block title %}编辑个人资料 - 提示词管理平台{%
+endblock %} {% block styles %}
+<style>
+  .profile-edit-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
+
+  .profile-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .profile-header {
+    background: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--primary-dark)
+    );
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .profile-header .avatar {
+    width: 90px;
+    height: 90px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin: 0 auto 1rem;
+  }
+
+  .profile-body {
+    padding: 2rem;
+    background-color: #fff;
+  }
+
+  .nav-tabs {
+    border-bottom: 2px solid var(--light-bg);
+    margin-bottom: 2rem;
+  }
+
+  .nav-tabs .nav-link {
+    border: none;
+    font-weight: 500;
+    color: var(--text-muted);
+    padding: 0.75rem 1.5rem;
+    margin-bottom: -2px;
+  }
+
+  .nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    background: transparent;
+  }
+
+  .nav-tabs .nav-link:hover:not(.active) {
+    border-bottom: 2px solid var(--light-bg);
+    color: var(--text-color);
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--light-bg);
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 45px;
+    cursor: pointer;
+    z-index: -10;
+  }
+
+  /* 头像上传相关样式 */
+  .avatar-upload {
+    position: relative;
+    display: inline-block;
+  }
+
+  .avatar-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+    border: 2px solid var(--primary-light);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .default-avatar {
+    width: 100%;
+    height: 100%;
+    background: var(--primary-light);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+  }
+
+  .avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="profile-edit-container">
+  <div class="profile-card">
+    <div class="profile-header">
+      <div class="avatar">
+        <i class="bi bi-person"></i>
+      </div>
+      <h1 class="h3 mb-1">编辑个人资料</h1>
+      <p class="mb-0">更新您的资料和账号设置</p>
+    </div>
+
+    <div class="profile-body">
+      <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link active"
+            id="basic-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#basic"
+            type="button"
+            role="tab"
+            aria-controls="basic"
+            aria-selected="true"
+          >
+            <i class="bi bi-person-vcard me-2"></i>基本资料
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="security-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#security"
+            type="button"
+            role="tab"
+            aria-controls="security"
+            aria-selected="false"
+          >
+            <i class="bi bi-shield-lock me-2"></i>安全设置
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="profileTabContent">
+        <div
+          class="tab-pane fade show active"
+          id="basic"
+          role="tabpanel"
+          aria-labelledby="basic-tab"
+        >
+          <form
+            method="POST"
+            action="{{ url_for('edit_profile') }}"
+            id="profile-form"
+            enctype="multipart/form-data"
+          >
+            <div class="form-section">
+              <h5 class="section-title">
+                <i class="bi bi-person-fill me-2"></i>个人信息
+              </h5>
+
+              <!-- 头像上传区域 -->
+              <div class="mb-4 text-center">
+                <div class="avatar-upload">
+                  <div class="avatar-preview mb-3">
+                    {% if user.avatar_url %}
+                    <img
+                      src="{{ user.avatar_url }}"
+                      alt="{{ user.username }}"
+                      id="avatarPreview"
+                      class="rounded-circle"
+                      width="120"
+                      height="120"
+                    />
+                    {% else %}
+                    <div class="default-avatar" id="avatarPreview">
+                      <i class="bi bi-person"></i>
+                    </div>
+                    {% endif %}
+                  </div>
+                  <label for="avatar" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-camera me-1"></i>上传头像
+                  </label>
+                  <input
+                    type="file"
+                    name="avatar"
+                    id="avatar"
+                    class="d-none"
+                    accept="image/jpeg,image/png,image/gif"
+                  />
+                  <div class="form-text mt-1">
+                    支持JPG、PNG和GIF格式，建议尺寸200x200像素
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="username"
+                  name="username"
+                  value="{{ user.username }}"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="email" class="form-label">邮箱地址</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  value="{{ user.email }}"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="text-end">
+              <a
+                href="{{ url_for('profile', user_id=session.user_id) }}"
+                class="btn btn-outline-secondary me-2"
+              >
+                <i class="bi bi-x-circle me-1"></i>取消
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-1"></i>保存修改
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div
+          class="tab-pane fade"
+          id="security"
+          role="tabpanel"
+          aria-labelledby="security-tab"
+        >
+          <form
+            method="POST"
+            action="{{ url_for('edit_profile') }}"
+            id="password-form"
+          >
+            <input type="hidden" name="username" value="{{ user.username }}" />
+            <input type="hidden" name="email" value="{{ user.email }}" />
+
+            <div class="form-section">
+              <h5 class="section-title">
+                <i class="bi bi-key-fill me-2"></i>更改密码
+              </h5>
+
+              <div class="mb-3 position-relative">
+                <label for="current_password" class="form-label"
+                  >当前密码</label
+                >
+                <input
+                  type="password"
+                  class="form-control"
+                  id="current_password"
+                  name="current_password"
+                  required
+                />
+                <span
+                  class="password-toggle"
+                  onclick="togglePasswordVisibility('current_password', 'currentPasswordIcon')"
+                >
+                  <i id="currentPasswordIcon" class="bi bi-eye-slash"></i>
+                </span>
+              </div>
+
+              <div class="mb-3 position-relative">
+                <label for="new_password" class="form-label">新密码</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="new_password"
+                  name="new_password"
+                  required
+                  minlength="8"
+                />
+                <span
+                  class="password-toggle"
+                  onclick="togglePasswordVisibility('new_password', 'newPasswordIcon')"
+                >
+                  <i id="newPasswordIcon" class="bi bi-eye-slash"></i>
+                </span>
+                <div class="form-text">密码至少需要8个字符</div>
+              </div>
+
+              <div class="mb-3 position-relative">
+                <label for="confirm_password" class="form-label"
+                  >确认新密码</label
+                >
+                <input
+                  type="password"
+                  class="form-control"
+                  id="confirm_password"
+                  name="confirm_password"
+                  required
+                />
+                <span
+                  class="password-toggle"
+                  onclick="togglePasswordVisibility('confirm_password', 'confirmPasswordIcon')"
+                >
+                  <i id="confirmPasswordIcon" class="bi bi-eye-slash"></i>
+                </span>
+              </div>
+            </div>
+
+            <div class="text-end">
+              <a
+                href="{{ url_for('profile', user_id=session.user_id) }}"
+                class="btn btn-outline-secondary me-2"
+              >
+                <i class="bi bi-x-circle me-1"></i>取消
+              </a>
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-key me-1"></i>更改密码
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 密码表单验证
+    const passwordForm = document.getElementById("password-form");
+    if (passwordForm) {
+      passwordForm.addEventListener("submit", function (e) {
+        const currentPassword = document.getElementById("current_password");
+        const newPassword = document.getElementById("new_password");
+        const confirmPassword = document.getElementById("confirm_password");
+
+        let hasError = false;
+
+        // 清除所有验证错误
+        [currentPassword, newPassword, confirmPassword].forEach((field) => {
+          field.classList.remove("is-invalid");
+        });
+
+        // 验证表单
+        if (!currentPassword.value) {
+          currentPassword.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (!newPassword.value || newPassword.value.length < 8) {
+          newPassword.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (
+          !confirmPassword.value ||
+          confirmPassword.value !== newPassword.value
+        ) {
+          confirmPassword.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (hasError) {
+          e.preventDefault();
+        }
+      });
+    }
+  });
+
+  // 密码显示切换功能
+  function togglePasswordVisibility(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      icon.classList.replace("bi-eye-slash", "bi-eye");
+    } else {
+      passwordInput.type = "password";
+      icon.classList.replace("bi-eye", "bi-eye-slash");
+    }
+  }
+
+  // 如果URL中有安全标签参数，自动激活该标签
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("tab") === "security") {
+    document.addEventListener("DOMContentLoaded", function () {
+      const securityTab = document.getElementById("security-tab");
+      if (securityTab) {
+        const tab = new bootstrap.Tab(securityTab);
+        tab.show();
+      }
+    });
+  }
+
+  // 头像预览
+  document.getElementById("avatar").addEventListener("change", function (e) {
+    if (this.files && this.files[0]) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const preview = document.getElementById("avatarPreview");
+
+        // 如果预览区域当前是默认头像
+        if (preview.classList.contains("default-avatar")) {
+          // 创建一个新的图片元素替换默认头像
+          const img = document.createElement("img");
+          img.id = "avatarPreview";
+          img.className = "rounded-circle";
+          img.width = 120;
+          img.height = 120;
+          img.src = e.target.result;
+
+          // 替换元素
+          const parent = preview.parentNode;
+          parent.replaceChild(img, preview);
+        } else {
+          // 如果已经是图片，只需更新src
+          preview.src = e.target.result;
+        }
+      };
+
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+</script>
+{% endblock %}

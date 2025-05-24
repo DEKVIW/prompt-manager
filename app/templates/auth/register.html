@@ -1,0 +1,77 @@
+{% extends 'base.html' %} {% block title %}注册 - 提示词管理平台{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card-form">
+      <h2 class="text-center mb-4">注册新账号</h2>
+
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          {{ form.username.label(class="form-label") }} {% if
+          form.username.errors %} {{ form.username(class="form-control
+          is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.username.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.username(class="form-control") }} {% endif %}
+          <div class="form-text">用户名只能包含字母、数字和下划线</div>
+        </div>
+
+        <div class="mb-3">
+          {{ form.email.label(class="form-label") }} {% if form.email.errors %}
+          {{ form.email(class="form-control is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.email.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.email(class="form-control") }} {% endif %}
+        </div>
+
+        <div class="mb-3">
+          {{ form.password.label(class="form-label") }} {% if
+          form.password.errors %} {{ form.password(class="form-control
+          is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.password.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.password(class="form-control") }} {% endif %}
+          <div class="form-text">密码长度必须至少为8个字符</div>
+        </div>
+
+        <div class="mb-3">
+          {{ form.password2.label(class="form-label") }} {% if
+          form.password2.errors %} {{ form.password2(class="form-control
+          is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.password2.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.password2(class="form-control") }} {% endif %}
+        </div>
+
+        <div class="mb-3">
+          {{ form.invite_code.label(class="form-label") }} {% if
+          form.invite_code.errors %} {{ form.invite_code(class="form-control
+          is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.invite_code.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.invite_code(class="form-control") }} {% endif %}
+          <div class="form-text">需要邀请码才能注册</div>
+        </div>
+
+        <div class="d-grid gap-2">
+          {{ form.submit(class="btn btn-primary") }}
+        </div>
+      </form>
+
+      <div class="text-center mt-4">
+        <p>
+          已有账号？
+          <a href="{{ url_for('auth.login') }}">立即登录</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

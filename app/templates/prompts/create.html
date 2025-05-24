@@ -1,0 +1,93 @@
+{% extends 'base.html' %} {% block title %}创建提示词 - 提示词管理平台{%
+endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card-form">
+      <h2 class="text-center mb-4">创建新提示词</h2>
+
+      <form
+        method="POST"
+        action="{{ url_for('prompts.create') }}"
+        enctype="multipart/form-data"
+      >
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          {{ form.title.label(class="form-label") }} {% if form.title.errors %}
+          {{ form.title(class="form-control is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.title.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.title(class="form-control") }} {% endif %}
+        </div>
+
+        <div class="mb-3">
+          {{ form.content.label(class="form-label") }} {% if form.content.errors
+          %} {{ form.content(class="form-control is-invalid", rows=10) }}
+          <div class="invalid-feedback">
+            {% for error in form.content.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.content(class="form-control", rows=10) }} {% endif
+          %}
+          <div class="form-text">输入提示词的完整内容</div>
+        </div>
+
+        <div class="mb-3">
+          {{ form.description.label(class="form-label") }} {% if
+          form.description.errors %} {{ form.description(class="form-control
+          is-invalid", rows=3) }}
+          <div class="invalid-feedback">
+            {% for error in form.description.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.description(class="form-control", rows=3) }} {%
+          endif %}
+          <div class="form-text">简要描述这个提示词的用途和特点</div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            {{ form.version.label(class="form-label") }} {% if
+            form.version.errors %} {{ form.version(class="form-control
+            is-invalid") }}
+            <div class="invalid-feedback">
+              {% for error in form.version.errors %} {{ error }} {% endfor %}
+            </div>
+            {% else %} {{ form.version(class="form-control") }} {% endif %}
+          </div>
+
+          <div class="col-md-6 mb-3">
+            {{ form.tags.label(class="form-label") }} {% if form.tags.errors %}
+            {{ form.tags(class="form-control is-invalid") }}
+            <div class="invalid-feedback">
+              {% for error in form.tags.errors %} {{ error }} {% endfor %}
+            </div>
+            {% else %} {{ form.tags(class="form-control") }} {% endif %}
+            <div class="form-text">多个标签请用逗号分隔</div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          {{ form.cover_image.label(class="form-label") }} {% if
+          form.cover_image.errors %} {{ form.cover_image(class="form-control
+          is-invalid") }}
+          <div class="invalid-feedback">
+            {% for error in form.cover_image.errors %} {{ error }} {% endfor %}
+          </div>
+          {% else %} {{ form.cover_image(class="form-control") }} {% endif %}
+          <div class="form-text">支持JPG、PNG格式的图片</div>
+        </div>
+
+        <div class="mb-4 form-check">
+          {{ form.is_public(class="form-check-input") }} {{
+          form.is_public.label(class="form-check-label") }}
+          <div class="form-text">公开的提示词将对所有用户可见</div>
+        </div>
+
+        <div class="d-grid gap-2">
+          {{ form.submit(class="btn btn-primary") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

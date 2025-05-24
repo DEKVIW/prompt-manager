@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- 定义渐变 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4361ee" />
+      <stop offset="100%" stop-color="#7209b7" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.2" />
+    </filter>
+  </defs>
+  
+  <!-- 背景圆形 -->
+  <circle cx="64" cy="64" r="60" fill="url(#bgGradient)" filter="url(#shadow)" />
+  
+  <!-- 图标设计：字母"P"表示Prompt -->
+  <path d="M64 32 L64 96 M64 32 C84 32 92 44 92 56 C92 68 84 80 64 80" 
+        stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  
+  <!-- 装饰格点 -->
+  <circle cx="48" cy="32" r="4" fill="white" opacity="0.7" />
+  <circle cx="80" cy="96" r="4" fill="white" opacity="0.7" />
+</svg> 

@@ -1,0 +1,634 @@
+{% extends 'base.html' %} {% block title %}管理员仪表盘 - 提示词管理平台{%
+endblock %} {% block styles %}
+<style>
+  .admin-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .dashboard-card {
+    border-radius: 1rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .dashboard-card .card-header {
+    background: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--primary-dark)
+    );
+    color: white;
+    font-weight: bold;
+    border-radius: 1rem 1rem 0 0;
+    padding: 1.25rem;
+  }
+
+  .dashboard-card .card-body {
+    padding: 1.5rem;
+  }
+
+  .stats-card {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    background: white;
+    height: 100%;
+  }
+
+  .stats-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.8rem;
+  }
+
+  .stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .stats-label {
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+
+  .users-icon {
+    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+  }
+
+  .prompts-icon {
+    background-color: rgba(var(--success-rgb), 0.1);
+    color: var(--success-color);
+  }
+
+  .tags-icon {
+    background-color: rgba(var(--warning-rgb), 0.1);
+    color: var(--warning-color);
+  }
+
+  .invites-icon {
+    background-color: rgba(var(--info-rgb), 0.1);
+    color: var(--info-color);
+  }
+
+  .admin-table {
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .admin-table th {
+    background-color: var(--light-bg);
+    font-weight: 600;
+  }
+
+  .table > :not(caption) > * > * {
+    padding: 0.75rem 1rem;
+  }
+
+  .invite-card {
+    border-radius: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .admin-tab-content {
+    padding: 1.5rem;
+    background: white;
+    border-radius: 0 0 1rem 1rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+
+  .admin-tabs {
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+
+  .admin-tabs .nav-link {
+    border-radius: 1rem 1rem 0 0;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+  }
+
+  .admin-tabs .nav-link.active {
+    background-color: white;
+    border-color: #dee2e6 #dee2e6 white;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="admin-container">
+  <div class="page-header d-flex justify-content-between align-items-center">
+    <h1 class="display-6">
+      <i class="bi bi-speedometer2 me-3"></i>管理员仪表盘
+    </h1>
+    <a href="/" class="btn btn-outline-primary">
+      <i class="bi bi-house me-2"></i>返回首页
+    </a>
+  </div>
+
+  <!-- 统计区域 -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="stats-card">
+        <div class="stats-icon users-icon">
+          <i class="bi bi-people"></i>
+        </div>
+        <div class="stats-number">{{ users|length }}</div>
+        <div class="stats-label">用户数量</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stats-card">
+        <div class="stats-icon prompts-icon">
+          <i class="bi bi-magic"></i>
+        </div>
+        <div class="stats-number">{{ prompts|length }}</div>
+        <div class="stats-label">提示词数量</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stats-card">
+        <div class="stats-icon tags-icon">
+          <i class="bi bi-tags"></i>
+        </div>
+        <div class="stats-number">{{ tags|length }}</div>
+        <div class="stats-label">标签数量</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stats-card">
+        <div class="stats-icon invites-icon">
+          <i class="bi bi-ticket-perforated"></i>
+        </div>
+        <div class="stats-number">{{ invite_codes|length }}</div>
+        <div class="stats-label">可用邀请码</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 标签页导航 -->
+  <ul class="nav nav-tabs admin-tabs" id="adminTab" role="tablist">
+    <li class="nav-item">
+      <a
+        class="nav-link active"
+        id="users-tab"
+        data-bs-toggle="tab"
+        href="#users"
+        role="tab"
+      >
+        <i class="bi bi-people me-2"></i>用户管理
+      </a>
+    </li>
+    <li class="nav-item">
+      <a
+        class="nav-link"
+        id="prompts-tab"
+        data-bs-toggle="tab"
+        href="#prompts"
+        role="tab"
+      >
+        <i class="bi bi-magic me-2"></i>提示词管理
+      </a>
+    </li>
+    <li class="nav-item">
+      <a
+        class="nav-link"
+        id="invites-tab"
+        data-bs-toggle="tab"
+        href="#invites"
+        role="tab"
+      >
+        <i class="bi bi-ticket-perforated me-2"></i>邀请码管理
+      </a>
+    </li>
+  </ul>
+
+  <div class="tab-content admin-tab-content" id="adminTabContent">
+    <!-- 用户管理 -->
+    <div class="tab-pane fade show active" id="users" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">用户列表</h3>
+        <form class="d-flex" role="search">
+          <input
+            class="form-control me-2"
+            type="search"
+            placeholder="搜索用户..."
+            aria-label="Search"
+          />
+          <button class="btn btn-outline-primary" type="submit">搜索</button>
+        </form>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>用户名</th>
+              <th>邮箱</th>
+              <th>注册时间</th>
+              <th>提示词数</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>
+                <a href="/profile/{{ user.id }}" class="text-decoration-none">
+                  {{ user.username }}
+                </a>
+                {% if user.is_admin %}
+                <span class="badge bg-primary ms-2">管理员</span>
+                {% endif %}
+              </td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+              <td>{{ user.prompts|length }}</td>
+              <td>
+                {% if user.is_banned %}
+                <span class="badge bg-danger">已禁用</span>
+                {% else %}
+                <span class="badge bg-success">正常</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                  >
+                    操作
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a class="dropdown-item" href="/profile/{{ user.id }}">
+                        <i class="bi bi-eye me-2"></i>查看资料
+                      </a>
+                    </li>
+                    {% if not user.is_admin %}
+                    <li>
+                      <form
+                        method="POST"
+                        action="/admin/toggle_admin/{{ user.id }}"
+                        style="display: inline"
+                      >
+                        <button type="submit" class="dropdown-item">
+                          <i class="bi bi-shield me-2"></i>设为管理员
+                        </button>
+                      </form>
+                    </li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider" /></li>
+                    {% if user.is_banned %}
+                    <li>
+                      <form
+                        method="POST"
+                        action="/admin/toggle_ban/{{ user.id }}"
+                        style="display: inline"
+                      >
+                        <button
+                          type="submit"
+                          class="dropdown-item text-success"
+                        >
+                          <i class="bi bi-unlock me-2"></i>解除禁用
+                        </button>
+                      </form>
+                    </li>
+                    {% else %}
+                    <li>
+                      <form
+                        method="POST"
+                        action="/admin/toggle_ban/{{ user.id }}"
+                        style="display: inline"
+                      >
+                        <button
+                          type="submit"
+                          class="dropdown-item text-warning"
+                        >
+                          <i class="bi bi-slash-circle me-2"></i>禁用账户
+                        </button>
+                      </form>
+                    </li>
+                    {% endif %}
+                    <li>
+                      <form
+                        method="POST"
+                        action="/admin/delete_user/{{ user.id }}"
+                        style="display: inline"
+                        onsubmit="return confirm('确定要删除用户 {{ user.username }} 吗？此操作不可撤销。')"
+                      >
+                        <button type="submit" class="dropdown-item text-danger">
+                          <i class="bi bi-trash me-2"></i>删除用户
+                        </button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 提示词管理 -->
+    <div class="tab-pane fade" id="prompts" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">提示词列表</h3>
+        <form class="d-flex" role="search">
+          <input
+            class="form-control me-2"
+            type="search"
+            placeholder="搜索提示词..."
+            aria-label="Search"
+          />
+          <button class="btn btn-outline-primary" type="submit">搜索</button>
+        </form>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>标题</th>
+              <th>创建者</th>
+              <th>标签</th>
+              <th>状态</th>
+              <th>创建时间</th>
+              <th>浏览量</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prompt in prompts %}
+            <tr>
+              <td>{{ prompt.id }}</td>
+              <td>
+                <a href="/prompts/{{ prompt.id }}" class="text-decoration-none">
+                  {{ prompt.title }}
+                </a>
+              </td>
+              <td>
+                <a
+                  href="/profile/{{ prompt.user_id }}"
+                  class="text-decoration-none"
+                >
+                  {{ prompt.user.username }}
+                </a>
+              </td>
+              <td>
+                {% if prompt.tags %} {% for tag in prompt.tags %}
+                <span class="badge bg-light text-dark me-1">{{ tag }}</span>
+                {% endfor %} {% endif %}
+              </td>
+              <td>
+                {% if prompt.is_public %}
+                <span class="badge bg-success">公开</span>
+                {% else %}
+                <span class="badge bg-secondary">私有</span>
+                {% endif %}
+              </td>
+              <td>{{ prompt.created_at.strftime('%Y-%m-%d') }}</td>
+              <td>{{ prompt.views or 0 }}</td>
+              <td>
+                <div class="btn-group">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                  >
+                    操作
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a class="dropdown-item" href="/prompts/{{ prompt.id }}">
+                        <i class="bi bi-eye me-2"></i>查看
+                      </a>
+                    </li>
+                    <li>
+                      <form
+                        method="POST"
+                        action="/admin/delete_prompt/{{ prompt.id }}"
+                        style="display: inline"
+                        onsubmit="return confirm('确定要删除提示词 {{ prompt.title }} 吗？此操作不可撤销。')"
+                      >
+                        <button type="submit" class="dropdown-item text-danger">
+                          <i class="bi bi-trash me-2"></i>删除
+                        </button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 邀请码管理 -->
+    <div class="tab-pane fade" id="invites" role="tabpanel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">邀请码管理</h3>
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#createInviteModal"
+        >
+          <i class="bi bi-plus-circle me-2"></i>生成邀请码
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table admin-table">
+          <thead>
+            <tr>
+              <th>邀请码</th>
+              <th>创建者</th>
+              <th>使用状态</th>
+              <th>使用者</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for code in invite_codes %}
+            <tr>
+              <td><code>{{ code.code }}</code></td>
+              <td>
+                {% if code.created_by %}
+                <a
+                  href="/profile/{{ code.created_by }}"
+                  class="text-decoration-none"
+                >
+                  {{ code.creator.username }}
+                </a>
+                {% else %} 系统 {% endif %}
+              </td>
+              <td>
+                {% if code.used %}
+                <span class="badge bg-secondary">已使用</span>
+                {% else %}
+                <span class="badge bg-success">可用</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if code.used_by %}
+                <a
+                  href="/profile/{{ code.used_by }}"
+                  class="text-decoration-none"
+                >
+                  {{ code.user.username }}
+                </a>
+                {% else %} - {% endif %}
+              </td>
+              <td>{{ code.created_at.strftime('%Y-%m-%d') }}</td>
+              <td>
+                {% if not code.used %}
+                <div class="btn-group">
+                  <button
+                    class="btn btn-sm btn-outline-primary copy-btn"
+                    data-clipboard-text="{{ code.code }}"
+                    data-bs-toggle="tooltip"
+                    data-bs-title="复制邀请码"
+                  >
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                  <form
+                    method="POST"
+                    action="/admin/delete_invite/{{ code.id }}"
+                    style="display: inline"
+                  >
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 创建邀请码模态框 -->
+<div
+  class="modal fade"
+  id="createInviteModal"
+  tabindex="-1"
+  aria-labelledby="createInviteModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createInviteModalLabel">生成新邀请码</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <form method="POST" action="/admin/create_invite">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="inviteCount" class="form-label">数量</label>
+            <input
+              type="number"
+              class="form-control"
+              id="inviteCount"
+              name="count"
+              min="1"
+              max="50"
+              value="1"
+            />
+            <div class="form-text">请指定要生成的邀请码数量（1-50）</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            取消
+          </button>
+          <button type="submit" class="btn btn-primary">生成</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 激活标签页
+    const triggerTabList = document.querySelectorAll("#adminTab a");
+    triggerTabList.forEach((triggerEl) => {
+      const tabTrigger = new bootstrap.Tab(triggerEl);
+      triggerEl.addEventListener("click", function (event) {
+        event.preventDefault();
+        tabTrigger.show();
+      });
+    });
+
+    // 初始化工具提示
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // 复制邀请码功能
+    document.querySelectorAll(".copy-btn").forEach((button) => {
+      button.addEventListener("click", function () {
+        const text = this.getAttribute("data-clipboard-text");
+        navigator.clipboard.writeText(text).then(() => {
+          // 更新工具提示文本
+          const tooltip = bootstrap.Tooltip.getInstance(button);
+          const originalTitle = button.getAttribute("data-bs-original-title");
+
+          button.setAttribute("data-bs-original-title", "已复制!");
+          tooltip.show();
+
+          // 恢复原始文本
+          setTimeout(() => {
+            button.setAttribute("data-bs-original-title", originalTitle);
+            tooltip.hide();
+          }, 1500);
+        });
+      });
+    });
+  });
+</script>
+{% endblock %}

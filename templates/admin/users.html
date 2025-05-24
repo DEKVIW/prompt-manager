@@ -1,0 +1,277 @@
+{% extends 'base.html' %} {% block title %}用户管理 - 提示词管理平台{% endblock
+%} {% block styles %}
+<style>
+  /* 添加容器限制最大宽度 */
+  .users-admin-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+
+  /* 表格响应式优化 */
+  .users-table {
+    width: 100%;
+    min-width: 750px; /* 设置最小宽度确保内容不会挤压 */
+  }
+
+  /* 按钮样式优化 */
+  .action-btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.35rem 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: none;
+  }
+
+  .action-btn i {
+    font-size: 0.95rem;
+  }
+
+  .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  .action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 封禁/解封按钮样式 */
+  .ban-btn {
+    background-color: #ff9800;
+    color: white;
+  }
+
+  .ban-btn:hover {
+    background-color: #f57c00;
+  }
+
+  .unban-btn {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .unban-btn:hover {
+    background-color: #43a047;
+  }
+
+  /* 删除按钮样式 */
+  .delete-btn {
+    background-color: #f44336;
+    color: white;
+  }
+
+  .delete-btn:hover {
+    background-color: #e53935;
+  }
+
+  /* 按钮组样式 */
+  .admin-action-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* 移动端优化 */
+  @media (max-width: 767.98px) {
+    .users-admin-container {
+      padding: 0 10px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    .card-body {
+      padding: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* 移动端表格滚动指示器 */
+    .table-scroll-container {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-scroll-hint {
+      display: block;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+    }
+
+    /* 增强移动端可点击区域 */
+    .action-btn {
+      min-height: 38px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    /* 移动端优化按钮组 */
+    .admin-action-group {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* 移动端表格字体调整 */
+    .users-table {
+      font-size: 0.9rem;
+    }
+
+    .users-table th,
+    .users-table td {
+      padding: 0.6rem;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+    }
+  }
+
+  /* 超小屏幕优化 */
+  @media (max-width: 375px) {
+    .users-admin-container {
+      padding: 0 8px;
+    }
+
+    .card-body {
+      padding: 0.75rem;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+    }
+
+    .admin-action-group {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .action-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="users-admin-container">
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1 class="mb-0">用户管理</h1>
+      </div>
+      <hr />
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">用户列表</h5>
+          <span class="table-scroll-hint d-md-none">← 左右滑动查看更多 →</span>
+          <div class="table-scroll-container">
+            <table class="table table-striped users-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>用户名</th>
+                  <th>邮箱</th>
+                  <th>注册时间</th>
+                  <th>身份</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for user in users %}
+                <tr>
+                  <td>{{ user.id }}</td>
+                  <td>{{ user.username }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.created_at }}</td>
+                  <td>
+                    {% if user.is_admin %}
+                    <span class="badge bg-danger">管理员</span>
+                    {% else %}
+                    <span class="badge bg-secondary">普通用户</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if user.is_banned %}
+                    <span class="badge bg-danger">已封禁</span>
+                    {% else %}
+                    <span class="badge bg-success">正常</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if not user.is_admin %}
+                    <div class="admin-action-group">
+                      <form
+                        action="/admin/users/ban/{{ user.id }}"
+                        method="post"
+                      >
+                        {% if user.is_banned %}
+                        <input type="hidden" name="is_banned" value="0" />
+                        <button
+                          type="submit"
+                          class="action-btn unban-btn"
+                          onclick="return confirm('确定要解封此用户吗？')"
+                        >
+                          <i class="bi bi-unlock"></i> 解封
+                        </button>
+                        {% else %}
+                        <input type="hidden" name="is_banned" value="1" />
+                        <button
+                          type="submit"
+                          class="action-btn ban-btn"
+                          onclick="return confirm('确定要封禁此用户吗？这将阻止用户登录。')"
+                        >
+                          <i class="bi bi-lock"></i> 封禁
+                        </button>
+                        {% endif %}
+                      </form>
+                      <form
+                        action="/admin/users/delete/{{ user.id }}"
+                        method="post"
+                      >
+                        <button
+                          type="submit"
+                          class="action-btn delete-btn"
+                          onclick="return confirm('警告：此操作将删除该用户及其所有数据，无法恢复！确定要继续吗？')"
+                        >
+                          <i class="bi bi-trash"></i> 删除
+                        </button>
+                      </form>
+                    </div>
+                    {% else %}
+                    <span class="text-muted">无操作</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="7" class="text-center">暂无用户</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

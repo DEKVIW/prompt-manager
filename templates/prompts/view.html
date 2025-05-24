@@ -1,0 +1,627 @@
+{% extends 'base.html' %} {% block title %}{{ prompt.title }} - 提示词管理平台{%
+endblock %} {% block styles %}
+<style>
+  .prompt-header {
+    background-image: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--secondary-color)
+    );
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .prompt-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none"/><path d="M10 10L90 10L90 90L10 90Z" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none"/><path d="M30 10L30 90" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><path d="M50 10L50 90" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><path d="M70 10L70 90" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><path d="M10 30L90 30" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><path d="M10 50L90 50" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><path d="M10 70L90 70" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></svg>');
+    opacity: 0.3;
+    z-index: -1;
+  }
+
+  .prompt-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+  }
+
+  .author-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .author-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    overflow: hidden; /* 确保图片不溢出 */
+    position: relative;
+  }
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 确保图片完全覆盖并保持比例 */
+    border-radius: 50%;
+    display: block;
+  }
+
+  .fallback-avatar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .prompt-tag {
+    display: inline-block;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .prompt-tag:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .prompt-content {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .prompt-content pre {
+    margin-bottom: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #333;
+  }
+
+  .prompt-action-btn {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
+
+  .copy-success {
+    background-color: #4caf50 !important;
+    border-color: #4caf50 !important;
+    color: white !important;
+  }
+
+  .sidebar-card {
+    margin-bottom: 1.5rem;
+  }
+
+  .badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .prompt-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    word-break: break-word;
+  }
+
+  .badge i {
+    margin-right: 0.25rem;
+  }
+
+  /* 移动端优化 */
+  @media (max-width: 767.98px) {
+    .prompt-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .prompt-meta > div,
+    .prompt-meta > span {
+      margin-right: 0 !important;
+    }
+
+    .prompt-meta i {
+      font-size: 0.9rem;
+    }
+
+    /* 移动端减少内边距，优化布局 */
+    .prompt-header {
+      padding: 1.25rem 1rem !important;
+    }
+
+    /* 让作者信息在移动端更突出 */
+    .author-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-right: 0.5rem;
+      flex-basis: 100%;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .prompt-title {
+      font-size: 1.5rem;
+      line-height: 1.3;
+    }
+
+    .prompt-meta {
+      flex-wrap: wrap;
+      row-gap: 0.75rem;
+    }
+
+    .prompt-meta > div {
+      display: flex;
+      align-items: center;
+    }
+
+    .prompt-meta .author-avatar {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+    }
+
+    .prompt-meta > div {
+      margin-right: 0.5rem;
+    }
+
+    /* 改进标签在移动端的显示 */
+    .prompt-header .badge {
+      padding: 0.35rem 0.6rem;
+      font-size: 0.75rem;
+    }
+
+    /* 改进编辑按钮在移动端的显示 */
+    .prompt-header .btn-light {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+    }
+
+    /* 增加间距让布局更合理 */
+    .prompt-header .row > div:last-child {
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      margin-top: 1rem;
+    }
+
+    .prompt-content {
+      padding: 1rem;
+    }
+
+    .prompt-content pre {
+      font-size: 0.85rem;
+    }
+
+    .prompt-action-btn {
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px; /* 增大点击区域 */
+      margin-bottom: 0.5rem;
+    }
+
+    .prompt-actions .col-12 {
+      margin-bottom: 0.5rem;
+    }
+
+    /* 侧边栏在移动端显示优化 */
+    .sidebar-card {
+      margin-bottom: 1rem;
+    }
+
+    .list-group-item {
+      padding: 0.75rem 0;
+    }
+  }
+
+  /* 手机超小屏幕适配 */
+  @media (max-width: 375px) {
+    .prompt-header {
+      padding: 1rem 0.75rem !important;
+    }
+
+    .prompt-title {
+      font-size: 1.3rem;
+    }
+
+    .prompt-meta {
+      font-size: 0.8rem;
+      gap: 0.5rem;
+    }
+
+    .author-avatar {
+      width: 32px !important;
+      height: 32px !important;
+      font-size: 0.9rem !important;
+    }
+  }
+
+  /* 优化头部徽章和按钮样式 */
+  .prompt-header .badge,
+  .prompt-header .btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    border-radius: 30px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .prompt-header .badge i,
+  .prompt-header .btn-sm i {
+    margin-right: 0.4rem;
+    font-size: 1rem;
+  }
+
+  .prompt-header .btn-outline-light {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+
+  .prompt-header .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: white;
+  }
+
+  .prompt-header .btn-outline-warning {
+    background-color: rgba(255, 193, 7, 0.15);
+    border-color: rgba(255, 193, 7, 0.5);
+    color: white;
+  }
+
+  .prompt-header .btn-outline-warning:hover {
+    background-color: rgba(255, 193, 7, 0.25);
+    border-color: rgba(255, 193, 7, 0.6);
+    color: white;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container py-4">
+  <!-- 提示词头部 -->
+  <div class="prompt-header p-4 rounded-3">
+    <div class="row align-items-center">
+      <div class="col-md-10 col-12">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <span
+            class="badge {% if prompt.is_public %}bg-success{% else %}bg-secondary{% endif %}"
+          >
+            <i
+              class="bi {% if prompt.is_public %}bi-globe{% else %}bi-lock{% endif %}"
+            ></i>
+            {% if prompt.is_public %}公开{% else %}私有{% endif %}
+          </span>
+          <span class="badge bg-info">
+            <i class="bi bi-code-slash"></i>
+            版本 {{ prompt.version or '1.0' }}
+          </span>
+          {% if session.user_id and (session.user_id != prompt.user_id) and
+          prompt.is_public %}
+          <button
+            id="favoriteButton"
+            class="btn btn-sm btn-outline-{% if is_favorited %}warning{% else %}light{% endif %} favorite-btn"
+            data-prompt-id="{{ prompt.id }}"
+          >
+            <i
+              class="bi {% if is_favorited %}bi-bookmark-heart-fill{% else %}bi-bookmark-heart{% endif %} me-1"
+            ></i>
+            {% if is_favorited %}已收藏{% else %}收藏{% endif %}
+          </button>
+          {% endif %}
+        </div>
+        <h1 class="fw-bold mb-2 prompt-title">{{ prompt.title }}</h1>
+
+        <div class="prompt-meta mt-3 d-flex flex-wrap align-items-center gap-2">
+          <div class="author-info">
+            <div class="author-avatar">
+              {% if prompt.avatar_url %}
+              <img
+                src="{{ prompt.avatar_url }}"
+                alt="{{ prompt.username }}"
+                class="avatar-img"
+              />
+              {% else %}
+              <div class="fallback-avatar">
+                {{ prompt.username[:1] | upper }}
+              </div>
+              {% endif %}
+            </div>
+            <span>{{ prompt.username }}</span>
+          </div>
+          <span class="d-none d-sm-inline">•</span>
+          <div class="d-flex align-items-center">
+            <i class="bi bi-eye me-1"></i>
+            <span>{{ prompt.view_count or 0 }} 次浏览</span>
+          </div>
+          <span class="d-none d-sm-inline">•</span>
+          <div class="d-flex align-items-center">
+            <i class="bi bi-calendar3 me-1"></i>
+            <span
+              >{% if prompt.created_at %} {{
+              prompt.created_at.strftime('%Y-%m-%d') if prompt.created_at is not
+              string else prompt.created_at }} {% else %} 未知时间 {% endif
+              %}</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-2 col-12 text-md-end text-center mt-3 mt-md-0">
+        {% if session.user_id == prompt.user_id %}
+        <a href="/edit-prompt/{{ prompt.id }}" class="btn btn-light">
+          <i class="bi bi-pencil me-1"></i> 编辑
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- 主要内容 -->
+    <div class="col-lg-8">
+      <!-- 提示词描述 -->
+      {% if prompt.description %}
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-info-circle me-2"></i> 描述
+          </h5>
+          <p class="card-text">{{ prompt.description }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- 提示词内容 -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-file-text me-2"></i> 提示词内容
+          </h5>
+          <div class="prompt-content">
+            <pre id="prompt-text">{{ prompt.content }}</pre>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-12">
+              <button
+                id="copyButton"
+                class="btn btn-primary w-100 prompt-action-btn copy-btn"
+                data-content="{{ prompt.content }}"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="复制到剪贴板"
+              >
+                <i class="bi bi-clipboard me-2"></i> 复制到剪贴板
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 标签 -->
+      {% if tags %}
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title mb-3"><i class="bi bi-tags me-2"></i> 标签</h5>
+          <div>
+            {% for tag in tags %}
+            <a href="/search?tag={{ tag.name }}" class="prompt-tag">
+              {{ tag.name }}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="col-lg-4">
+      <div class="card sidebar-card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-person-circle me-2"></i> 作者信息
+          </h5>
+          <div class="d-flex align-items-center mb-3 mt-3">
+            <div class="author-avatar me-3">
+              {% if prompt.avatar_url %}
+              <img
+                src="{{ prompt.avatar_url }}"
+                alt="{{ prompt.username }}"
+                class="avatar-img"
+              />
+              {% else %}
+              <div class="fallback-avatar">
+                {{ prompt.username[:1] | upper }}
+              </div>
+              {% endif %}
+            </div>
+            <div>
+              <h6 class="mb-0">{{ prompt.username }}</h6>
+              <a
+                href="{{ url_for('profile', user_id=prompt.user_id) }}"
+                class="text-muted small"
+                >查看用户资料</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card sidebar-card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-info-circle me-2"></i> 提示词信息
+          </h5>
+          <ul class="list-group list-group-flush mt-3">
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center border-0 px-0"
+            >
+              <span><i class="bi bi-eye me-2"></i>浏览次数</span>
+              <span class="badge bg-primary rounded-pill"
+                >{{ prompt.view_count or 0 }}</span
+              >
+            </li>
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center border-0 px-0"
+            >
+              <span><i class="bi bi-calendar3 me-2"></i>创建日期</span>
+              <span>
+                {% if prompt.created_at %} {{
+                prompt.created_at.strftime('%Y-%m-%d') if prompt.created_at is
+                not string else prompt.created_at }} {% else %} 未知时间 {%
+                endif %}
+              </span>
+            </li>
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center border-0 px-0"
+            >
+              <span><i class="bi bi-calendar-check me-2"></i>更新日期</span>
+              <span>
+                {% if prompt.updated_at %} {{
+                prompt.updated_at.strftime('%Y-%m-%d') if prompt.updated_at is
+                not string else prompt.updated_at }} {% else %} 未知时间 {%
+                endif %}
+              </span>
+            </li>
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center border-0 px-0"
+            >
+              <span><i class="bi bi-code-slash me-2"></i>版本</span>
+              <span>{{ prompt.version or '1.0' }}</span>
+            </li>
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center border-0 px-0"
+            >
+              <span><i class="bi bi-globe me-2"></i>状态</span>
+              <span
+                class="badge {% if prompt.is_public %}bg-success{% else %}bg-secondary{% endif %}"
+              >
+                <i
+                  class="bi {% if prompt.is_public %}bi-globe{% else %}bi-lock{% endif %}"
+                ></i>
+                {% if prompt.is_public %}公开{% else %}私有{% endif %}
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 初始化工具提示
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // 收藏按钮功能
+    const favoriteButton = document.getElementById("favoriteButton");
+    if (favoriteButton) {
+      favoriteButton.addEventListener("click", function () {
+        const promptId = this.getAttribute("data-prompt-id");
+
+        // 发送收藏请求
+        fetch(`/prompts/${promptId}/favorite`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // 更新按钮状态
+              if (data.is_favorited) {
+                this.innerHTML =
+                  '<i class="bi bi-bookmark-heart-fill me-1"></i> 已收藏';
+                this.classList.remove("btn-outline-light");
+                this.classList.add("btn-outline-warning");
+              } else {
+                this.innerHTML =
+                  '<i class="bi bi-bookmark-heart me-1"></i> 收藏';
+                this.classList.remove("btn-outline-warning");
+                this.classList.add("btn-outline-light");
+              }
+
+              // 使用通用toast显示提示
+              showToast(data.message, "success");
+            } else {
+              // 处理错误
+              console.error("收藏操作失败:", data.message);
+              showToast(data.message || "收藏操作失败", "danger");
+            }
+          })
+          .catch((error) => {
+            console.error("请求错误:", error);
+            showToast("请求错误，请稍后再试", "danger");
+          });
+      });
+    }
+
+    // 为复制按钮添加事件监听器
+    const copyButton = document.getElementById("copyButton");
+    if (copyButton) {
+      copyButton.addEventListener("click", function () {
+        const content = this.getAttribute("data-content");
+        if (content) {
+          // 使用main.js中的复制函数
+          copyToClipboard(content, this);
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

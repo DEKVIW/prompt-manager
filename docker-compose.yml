@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  prompt-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: prompt-manager:latest
+    container_name: prompt-manager
+    restart: unless-stopped
+    user: root
+    ports:
+      - "5000:80"
+    volumes:
+      - ./data:/app/instance
+      - ./logs:/app/logs
+      - ./uploads:/app/static/img/avatars
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-change_this_to_a_random_string}
+      - FLASK_DEBUG=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
