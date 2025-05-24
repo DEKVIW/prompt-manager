@@ -5,6 +5,7 @@ import sys
 from app import app, db
 from app.models.user import User, InviteCode
 from app.models.prompt import Prompt, Tag
+from werkzeug.security import generate_password_hash
 
 def generate_invite_code(length=8):
     """生成随机邀请码"""
@@ -34,7 +35,7 @@ def init_db():
                 admin = User(
                     username='admin',
                     email='admin@example.com',
-                    password='admin123',
+                    password_hash=generate_password_hash('admin123', method='pbkdf2:sha256'),
                     is_admin=True
                 )
                 db.session.add(admin)

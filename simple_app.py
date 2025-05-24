@@ -353,7 +353,7 @@ def register():
             is_admin = db.execute('SELECT COUNT(*) as count FROM users').fetchone()['count'] == 0
             
             # 生成密码哈希值并输出到控制台以便调试
-            password_hash = generate_password_hash(password)
+            password_hash = generate_password_hash(password, method='pbkdf2:sha256')
             print(f"为用户 {username} 生成的密码哈希值: {password_hash}")
             
             try:
@@ -1191,7 +1191,7 @@ def edit_profile():
                 
                 # 如果有密码更改，也更新密码
                 if new_password:
-                    hashed_password = generate_password_hash(new_password)
+                    hashed_password = generate_password_hash(new_password, method='pbkdf2:sha256')
                     db.execute(
                         'UPDATE users SET password_hash = ? WHERE id = ?',
                         (hashed_password, user_id)

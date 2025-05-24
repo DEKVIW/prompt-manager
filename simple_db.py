@@ -112,7 +112,7 @@ def init_db():
         
         # 创建管理员账号，使用 werkzeug.security 生成密码哈希
         admin_password = 'admin123'
-        admin_password_hash = generate_password_hash(admin_password)
+        admin_password_hash = generate_password_hash(admin_password, method='pbkdf2:sha256')
         cursor.execute('''
         INSERT INTO users (username, email, password_hash, is_admin)
         VALUES (?, ?, ?, ?)

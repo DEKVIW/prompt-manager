@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+instance/
+logs/
+*.db
+*.log
+*.sqlite3
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# 上传和静态生成文件
+uploads/
+static/img/avatars/
+static/img/covers/
+
+# 数据库
+data/
+
+# 其他
+*.bak 

@@ -28,13 +28,58 @@
 
 ### 一键部署
 
+* 创建docker-compose.yml文件
+
 ```bash
 # 从Docker Hub拉取镜像
-docker pull yilan666/prompt-manager:1.0
+version: "3"
 
-# 或者使用docker-compose自动构建和部署
-docker-compose up -d --build
+services:
+  prompt-manager:
+    image: yilan666/prompt-manager:1.1.2
+    ports:
+      - "8080:80"
+    user: root
+    volumes:
+      - ./data:/app/instance
+      - ./logs:/app/logs
+      - ./uploads:/app/static/img/avatars
+    environment:
+      - SECRET_KEY=              #加密密钥
+      - FLASK_DEBUG=false
+    restart: unless-stopped
+    networks:
+      - prompt-network
+
+networks:
+  prompt-network:
+    driver: bridge
 ```
+
+执行：
+
+```shell
+docker-compose up -d
+```
+
+### 自构建镜像
+
+1. 拉取代码
+
+   ```sh
+   git clone https://github.com/DEKVIW/prompt-manager.git
+   ```
+
+2. 执行
+
+   ```sh
+   docker-compose up -d --build
+   ```
+
+**注意：**
+
+1. docker-compose 中随机生成一串密钥补充填写在`- SECRET_KEY=`后面；
+2. 如果使用`image: yilan666/prompt-manager:1.1`这个镜像部署后的登陆密码是`aaaaaaaa`
 
 ### 优化特性
 
@@ -53,13 +98,14 @@ docker-compose up -d --build
 
 - `./data`: 数据库文件
 - `./logs`: 应用日志
+- `./uploads`:头像图片
 
 ### 访问应用
 
 部署完成后，通过浏览器访问:
 
 ```
-http://localhost
+http://ip:8080
 ```
 
 ## 本地开发环境设置
