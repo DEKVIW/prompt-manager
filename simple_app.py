@@ -925,6 +925,22 @@ def search():
             'ORDER BY t.name'
         ).fetchall()
     
+    # 为每个prompt添加标签信息
+    prompts_with_tags = []
+    for prompt_row in prompts:
+        prompt = dict(prompt_row)  # 转换为可修改的字典
+        # 获取该提示词的标签
+        prompt_tags = db.execute(
+            'SELECT t.* FROM tags t '
+            'JOIN tags_prompts tp ON t.id = tp.tag_id '
+            'WHERE tp.prompt_id = ?',
+            (prompt['id'],)
+        ).fetchall()
+        prompt['tags'] = prompt_tags
+        prompts_with_tags.append(prompt)
+    
+    prompts = prompts_with_tags
+    
     return render_template('search.html', prompts=prompts, tags=tags, query=query, selected_tag=tag)
 
 @app.route('/admin/users')

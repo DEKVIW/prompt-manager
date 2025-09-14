@@ -41,6 +41,32 @@ endblock %} {% block styles %}
     padding: 1.25rem;
   }
 
+  .prompt-meta-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .prompt-meta-inline i {
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+
+  /* 可点击卡片样式 */
+  .clickable-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .clickable-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .clickable-card:active {
+    transform: translateY(-1px);
+  }
+
   .prompt-footer {
     padding: 1rem 1.25rem;
     background-color: rgba(0, 0, 0, 0.02);
@@ -53,12 +79,12 @@ endblock %} {% block styles %}
   .prompt-meta {
     display: flex;
     align-items: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 1.5rem;
     font-size: 0.9rem;
     color: #6c757d;
-    overflow: hidden;
-    max-width: 70%;
+    overflow: visible;
+    max-width: 100%;
   }
 
   .prompt-footer .btn {
@@ -72,6 +98,7 @@ endblock %} {% block styles %}
     align-items: center;
     gap: 0.5rem;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .prompt-tag {
@@ -426,7 +453,10 @@ endblock %} {% block styles %}
     <div class="col-md-10 mx-auto">
       <div class="prompt-list-container">
         {% if prompts %} {% for prompt in prompts %}
-        <div class="prompt-list-item">
+        <div
+          class="prompt-list-item clickable-card"
+          data-url="/prompts/{{ prompt.id }}"
+        >
           <div class="prompt-header">
             <h2 class="prompt-title">{{ prompt.title }}</h2>
             <span class="badge bg-success">公开</span>
@@ -435,7 +465,10 @@ endblock %} {% block styles %}
             <p>{{ prompt.description }}</p>
             <div class="mt-3">
               {% if prompt.tags %} {% for tag in prompt.tags %}
-              <a href="/prompts/all?tag={{ tag.name }}" class="prompt-tag"
+              <a
+                href="/prompts/all?tag={{ tag.name }}"
+                class="prompt-tag"
+                onclick="event.stopPropagation()"
                 >{{ tag.name }}</a
               >
               {% endfor %} {% endif %}
@@ -463,12 +496,6 @@ endblock %} {% block styles %}
                 </span>
               </div>
             </div>
-            <a
-              href="/prompts/{{ prompt.id }}"
-              class="btn btn-primary d-md-inline-flex d-flex"
-            >
-              <i class="bi bi-eye me-2 d-md-none"></i> 查看详情
-            </a>
           </div>
         </div>
         {% endfor %} {% endif %}
@@ -558,4 +585,23 @@ endblock %} {% block styles %}
     </div>
   </div>
 </div>
+{% endblock %} {% block scripts %}
+<script>
+  // 卡片点击事件
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".clickable-card").forEach((card) => {
+      card.addEventListener("click", function (e) {
+        // 如果点击的是标签或按钮，不触发卡片点击
+        if (
+          e.target.closest(".prompt-tag") ||
+          e.target.closest("button") ||
+          e.target.closest("a")
+        ) {
+          return;
+        }
+        window.location.href = this.dataset.url;
+      });
+    });
+  });
+</script>
 {% endblock %}

@@ -50,34 +50,218 @@ endblock %} {% block styles %}
     box-shadow: var(--box-shadow);
   }
 
-  /* 标题统一限制为一行显示 */
-  .card-title {
+  /* 使用与其他页面一致的卡片样式 */
+  .prompt-list-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .prompt-list-item {
+    background-color: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .prompt-list-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .prompt-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .prompt-title {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+    color: var(--primary-color);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 70%;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
   }
 
-  /* 描述限制为三行显示 */
-  .card-text {
+  .prompt-body {
+    padding: 1.25rem;
+  }
+
+  .prompt-body p {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: 3.6em;
+    line-height: 1.5;
+    margin-bottom: 0;
   }
+
+  .prompt-meta-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .prompt-meta-inline i {
+    font-size: 0.9rem;
+    color: #6c757d;
+  }
+
+  .prompt-footer {
+    padding: 1rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .prompt-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+    overflow: visible;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .prompt-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .prompt-tag {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    border-radius: 30px;
+    margin: 0.4rem;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transform-origin: center;
+  }
+
+  /* 词云效果 - 大小变化 */
+  .prompt-tag:nth-child(3n + 1) {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .prompt-tag:nth-child(3n + 2) {
+    font-size: 0.9rem;
+    padding: 0.35rem 0.8rem;
+  }
+
+  .prompt-tag:nth-child(3n + 3) {
+    font-size: 1rem;
+    padding: 0.4rem 0.9rem;
+    font-weight: 500;
+  }
+
+  /* 词云效果 - 颜色变化 */
+  .prompt-tag:nth-child(5n + 1) {
+    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary-color);
+  }
+
+  .prompt-tag:nth-child(5n + 2) {
+    background-color: rgba(var(--success-rgb), 0.1);
+    color: var(--success-color);
+  }
+
+  .prompt-tag:nth-child(5n + 3) {
+    background-color: rgba(var(--info-rgb), 0.1);
+    color: var(--info-color);
+  }
+
+  .prompt-tag:nth-child(5n + 4) {
+    background-color: rgba(var(--warning-rgb), 0.1);
+    color: var(--warning-color);
+  }
+
+  .prompt-tag:nth-child(5n + 5) {
+    background-color: rgba(var(--danger-rgb), 0.1);
+    color: var(--danger-color);
+  }
+
+  /* 悬浮效果增强 */
+  .prompt-tag:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+  }
+
+  /* 可点击卡片样式 */
+  .clickable-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .clickable-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .clickable-card:active {
+    transform: translateY(-1px);
+  }
+
+  /* 这些样式只适用于我的提示词页面，不会影响其他页面 */
 
   /* 移动端适配样式 - 仅针对"我的提示词"页面 */
   .prompt-card-actions {
     display: flex;
+    justify-content: flex-end;
     gap: 8px;
+    flex-shrink: 0;
   }
 
   .prompt-card-actions .btn {
-    min-width: 70px;
+    min-width: 60px;
+    max-width: 80px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 响应式设计 - 统一同一行布局，只调整按钮大小 */
+  @media (max-width: 991.98px) {
+    .prompt-meta {
+      gap: 1rem;
+    }
+
+    .prompt-meta-item {
+      font-size: 0.85rem;
+    }
+
+    .prompt-card-actions .btn {
+      max-width: 60px;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.3rem;
+    }
   }
 
   @media (max-width: 768px) {
@@ -85,23 +269,26 @@ endblock %} {% block styles %}
       padding: 1rem;
     }
 
-    .card-title {
-      font-size: 1.1rem;
-      margin-bottom: 0.75rem;
+    .prompt-meta {
+      gap: 0.75rem;
     }
 
-    .card-body {
-      padding: 1rem;
-    }
-
-    .card-footer {
-      padding: 0.75rem 1rem;
-    }
-
-    /* 移动端适配卡片底部样式 */
-    .card-footer .text-muted {
+    .prompt-meta-item {
       font-size: 0.8rem;
     }
+
+    .prompt-meta-item i {
+      font-size: 0.8rem;
+    }
+
+    .prompt-card-actions .btn {
+      max-width: 50px;
+      font-size: 0.65rem;
+      padding: 0.1rem 0.25rem;
+    }
+  }
+
+    /* 移动端样式调整 - 移除可能影响全局的样式 */
 
     /* 优化移动端卡片底部布局 */
     .prompt-card-footer {
@@ -111,18 +298,7 @@ endblock %} {% block styles %}
       align-items: flex-start !important;
     }
 
-    /* 移动端按钮组样式 */
-    .prompt-card-actions {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .prompt-card-actions .btn {
-      flex: 1;
-      padding: 0.5rem;
-      font-size: 0.85rem;
-    }
+    /* 移动端按钮组样式 - 已在上面的媒体查询中处理 */
   }
 
   /* 超小屏幕适配 */
@@ -135,9 +311,7 @@ endblock %} {% block styles %}
       padding: 0.75rem;
     }
 
-    .card-footer {
-      padding: 0.75rem;
-    }
+    /* 移除可能影响全局的样式 */
   }
 </style>
 {% endblock %} {% block content %}
@@ -156,51 +330,56 @@ endblock %} {% block styles %}
     </div>
 
     {% if prompts %}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="prompt-list-container">
       {% for prompt in prompts %}
-      <div class="col">
-        <div class="card h-100">
-          <div class="card-body">
-            <h5 class="card-title">{{ prompt.title }}</h5>
-            <p class="card-text">{{ prompt.description or '无描述' }}</p>
-            <div class="mt-2 mb-2">
-              <span
-                class="badge {% if prompt.is_public %}bg-success{% else %}bg-secondary{% endif %}"
-              >
-                {% if prompt.is_public %}公开{% else %}私有{% endif %}
-              </span>
-              <small class="text-muted ms-2">版本 {{ prompt.version }}</small>
-            </div>
-            {% if prompt.tags %}
-            <div class="mt-2">
-              {% for tag in prompt.tags %}
-              <span class="tag-pill">{{ tag.name }}</span>
-              {% endfor %}
-            </div>
-            {% endif %}
-          </div>
-          <div
-            class="card-footer d-flex justify-content-between align-items-center prompt-card-footer"
+      <div
+        class="prompt-list-item clickable-card"
+        data-url="/prompts/{{ prompt.id }}"
+      >
+        <div class="prompt-header">
+          <h2 class="prompt-title">{{ prompt.title }}</h2>
+          <span
+            class="badge {% if prompt.is_public %}bg-success{% else %}bg-secondary{% endif %}"
           >
-            <small class="text-muted">
-              <i class="bi bi-eye me-1"></i> {{ prompt.view_count }} {% if
-              prompt.created_at %}
-              <span class="ms-2">
-                <i class="bi bi-calendar3 me-1"></i> {{ prompt.created_at }}
-              </span>
-              {% endif %}
-            </small>
-            <div class="prompt-card-actions">
-              <a href="/prompts/{{ prompt.id }}" class="btn btn-sm btn-primary">
-                <i class="bi bi-eye d-md-none me-1"></i> 查看
-              </a>
-              <a
-                href="/edit-prompt/{{ prompt.id }}"
-                class="btn btn-sm btn-outline-secondary"
-              >
-                <i class="bi bi-pencil d-md-none me-1"></i> 编辑
-              </a>
+            {% if prompt.is_public %}公开{% else %}私有{% endif %}
+          </span>
+        </div>
+        <div class="prompt-body">
+          <p>{{ prompt.description or '无描述' }}</p>
+          {% if prompt.tags %}
+          <div class="mt-3">
+            {% for tag in prompt.tags %}
+            <a
+              href="/prompts/all?tag={{ tag.name }}"
+              class="prompt-tag"
+              onclick="event.stopPropagation()"
+              >{{ tag.name }}</a
+            >
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="prompt-footer">
+          <div class="prompt-meta">
+            <div class="prompt-meta-item">
+              <i class="bi bi-eye"></i>
+              <span>{{ prompt.view_count or 0 }} 次浏览</span>
             </div>
+            <div class="prompt-meta-item">
+              <i class="bi bi-calendar3"></i>
+              <span
+                >{{ prompt.created_at[:10] if prompt.created_at else '未知时间'
+                }}</span
+              >
+            </div>
+          </div>
+          <div class="prompt-card-actions" onclick="event.stopPropagation()">
+            <a
+              href="/edit-prompt/{{ prompt.id }}"
+              class="btn btn-outline-secondary btn-sm"
+            >
+              <i class="bi bi-pencil me-1"></i> 编辑
+            </a>
           </div>
         </div>
       </div>
@@ -271,4 +450,23 @@ endblock %} {% block styles %}
     {% endif %}
   </div>
 </div>
+{% endblock %} {% block scripts %}
+<script>
+  // 卡片点击事件
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".clickable-card").forEach((card) => {
+      card.addEventListener("click", function (e) {
+        // 如果点击的是标签、按钮或编辑链接，不触发卡片点击
+        if (
+          e.target.closest(".prompt-tag") ||
+          e.target.closest("button") ||
+          e.target.closest("a")
+        ) {
+          return;
+        }
+        window.location.href = this.dataset.url;
+      });
+    });
+  });
+</script>
 {% endblock %}
