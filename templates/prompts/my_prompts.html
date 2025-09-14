@@ -50,6 +50,23 @@ endblock %} {% block styles %}
     box-shadow: var(--box-shadow);
   }
 
+  /* 标题统一限制为一行显示 */
+  .card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 描述限制为三行显示 */
+  .card-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 3.6em;
+  }
+
   /* 移动端适配样式 - 仅针对"我的提示词"页面 */
   .prompt-card-actions {
     display: flex;

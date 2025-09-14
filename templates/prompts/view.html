@@ -101,6 +101,9 @@ endblock %} {% block styles %}
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     border: 1px solid rgba(0, 0, 0, 0.05);
+    max-height: 60vh;
+    overflow-y: auto;
+    position: relative;
   }
 
   .prompt-content pre {
@@ -140,6 +143,7 @@ endblock %} {% block styles %}
     font-weight: bold;
     margin-bottom: 1rem;
     word-break: break-word;
+    line-height: 1.3;
   }
 
   .badge i {
@@ -229,6 +233,7 @@ endblock %} {% block styles %}
 
     .prompt-content {
       padding: 1rem;
+      max-height: 50vh;
     }
 
     .prompt-content pre {
@@ -277,6 +282,11 @@ endblock %} {% block styles %}
       width: 32px !important;
       height: 32px !important;
       font-size: 0.9rem !important;
+    }
+
+    .prompt-content {
+      max-height: 40vh;
+      padding: 0.75rem;
     }
   }
 

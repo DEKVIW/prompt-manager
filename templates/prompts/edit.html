@@ -191,15 +191,24 @@ endblock %} {% block styles %}
                     type="text"
                     class="form-control"
                     id="tagInput"
-                    placeholder="添加标签并按回车"
+                    placeholder="添加标签并按回车，用逗号分隔多个标签"
                   />
+                </div>
+                <div class="form-text">
+                  <i class="bi bi-info-circle me-1"></i>
+                  支持一次添加多个标签，用常见符号分隔，例如：AI,编程
+                  代码生成#翻译
                 </div>
 
                 <div class="tag-container" id="tagContainer">
                   {% if current_tags %} {% for tag in current_tags.split(',') %}
                   <div class="tag-item">
-                    {{ tag }}
-                    <input type="hidden" name="tags" value="{{ tag }}" />
+                    {{ tag.strip() }}
+                    <input
+                      type="hidden"
+                      name="tags"
+                      value="{{ tag.strip() }}"
+                    />
                     <span class="remove-tag"><i class="bi bi-x"></i></span>
                   </div>
                   {% endfor %} {% endif %}
@@ -253,21 +262,21 @@ endblock %} {% block styles %}
     const tagInput = document.getElementById("tagInput");
     const tagContainer = document.getElementById("tagContainer");
 
-    // 添加标签函数
-    function addTag(tagText) {
-      if (tagText.trim() === "") return;
+    // 添加单个标签函数
+    function addSingleTag(tagText) {
+      if (tagText.trim() === "") return false;
 
       // 检查标签是否已存在
       const existingTags = Array.from(
         tagContainer.querySelectorAll(".tag-item input")
       ).map((input) => input.value);
-      if (existingTags.includes(tagText.trim())) return;
+      if (existingTags.includes(tagText.trim())) return false;
 
       const tagItem = document.createElement("div");
       tagItem.className = "tag-item";
       tagItem.innerHTML = `
-        ${tagText}
-        <input type="hidden" name="tags" value="${tagText}">
+        ${tagText.trim()}
+        <input type="hidden" name="tags" value="${tagText.trim()}">
         <span class="remove-tag"><i class="bi bi-x"></i></span>
       `;
 
@@ -280,16 +289,67 @@ endblock %} {% block styles %}
           tagItem.remove();
         });
 
-      // 清空输入
+      return true;
+    }
+
+    // 添加多个标签函数
+    function addTags(input) {
+      if (input.trim() === "") return;
+
+      // 支持多种分隔符：逗号、分号、空格、井号、斜杠、竖线、换行等
+      const separators = /[,;，；\s\n#\/\|·\-_\+\*~`]+/;
+      const tags = input.split(separators).filter((tag) => tag.trim() !== "");
+
+      let addedCount = 0;
+      tags.forEach((tag) => {
+        if (addSingleTag(tag)) {
+          addedCount++;
+        }
+      });
+
+      // 清空输入并聚焦
       tagInput.value = "";
       tagInput.focus();
+
+      // 只在标签重复或格式错误时显示警告
+      if (addedCount === 0 && tags.length > 0) {
+        showTagFeedback("标签已存在或格式不正确", "warning");
+      }
+    }
+
+    // 显示标签操作反馈
+    function showTagFeedback(message, type) {
+      const feedback = document.createElement("div");
+      feedback.className = `alert alert-${type} alert-dismissible fade show mt-2`;
+      feedback.style.fontSize = "0.85rem";
+      feedback.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+      `;
+
+      const tagInput = document.getElementById("tagInput");
+      tagInput.parentNode.insertBefore(feedback, tagInput.nextSibling);
+
+      // 3秒后自动消失
+      setTimeout(() => {
+        if (feedback.parentNode) {
+          feedback.remove();
+        }
+      }, 3000);
     }
 
     // 回车添加标签
     tagInput.addEventListener("keypress", function (e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        addTag(this.value);
+        addTags(this.value);
+      }
+    });
+
+    // 失去焦点时也尝试添加标签
+    tagInput.addEventListener("blur", function () {
+      if (this.value.trim() !== "") {
+        addTags(this.value);
       }
     });
 

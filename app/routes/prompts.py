@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, abort, jsonify
@@ -47,8 +48,20 @@ def create():
         )
         
         # 处理标签
-        if form.tags.data:
-            tags_list = [tag.strip() for tag in form.tags.data.split(',') if tag.strip()]
+        # 从request中获取所有tags参数（支持多个标签）
+        tags_data = request.form.getlist('tags')
+        if tags_data:
+            # 处理每个标签字段，支持多种分隔符
+            all_tags = []
+            for tag_field in tags_data:
+                if tag_field.strip():
+                    # 支持多种分隔符：逗号、分号、空格、井号、斜杠、竖线、换行等
+                    separators = r'[,;，；\s\n#\/\|·\-_\+\*~`]+'
+                    split_tags = re.split(separators, tag_field)
+                    all_tags.extend([tag.strip() for tag in split_tags if tag.strip()])
+            
+            # 去重并添加标签
+            tags_list = list(set(all_tags))
             for tag_name in tags_list:
                 prompt.add_tag(tag_name)
         
@@ -103,8 +116,20 @@ def edit(id):
             prompt.tags.remove(tag)
             
         # 添加新标签
-        if form.tags.data:
-            tags_list = [tag.strip() for tag in form.tags.data.split(',') if tag.strip()]
+        # 从request中获取所有tags参数（支持多个标签）
+        tags_data = request.form.getlist('tags')
+        if tags_data:
+            # 处理每个标签字段，支持多种分隔符
+            all_tags = []
+            for tag_field in tags_data:
+                if tag_field.strip():
+                    # 支持多种分隔符：逗号、分号、空格、井号、斜杠、竖线、换行等
+                    separators = r'[,;，；\s\n#\/\|·\-_\+\*~`]+'
+                    split_tags = re.split(separators, tag_field)
+                    all_tags.extend([tag.strip() for tag in split_tags if tag.strip()])
+            
+            # 去重并添加标签
+            tags_list = list(set(all_tags))
             for tag_name in tags_list:
                 prompt.add_tag(tag_name)
         
@@ -119,11 +144,11 @@ def edit(id):
     form.version.data = prompt.version
     form.is_public.data = prompt.is_public
     
-    # 填充标签
+    # 填充标签 - 传递给模板的格式
     tags = [tag.name for tag in prompt.tags.all()]
-    form.tags.data = ', '.join(tags)
+    current_tags = ', '.join(tags)
     
-    return render_template('prompts/edit.html', form=form, prompt=prompt)
+    return render_template('prompts/edit.html', form=form, prompt=prompt, current_tags=current_tags)
 
 @prompts.route('/<int:id>/delete', methods=['POST'])
 @login_required
