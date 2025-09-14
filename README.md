@@ -28,7 +28,7 @@
 
 ### 一键部署
 
-* 创建docker-compose.yml文件
+- 创建 docker-compose.yml 文件
 
 ```bash
 # 从Docker Hub拉取镜像
@@ -36,7 +36,7 @@ version: "3"
 
 services:
   prompt-manager:
-    image: yilan666/prompt-manager:1.1.2
+    image: yilan666/prompt-manager:1.1.3
     ports:
       - "8080:80"
     user: root
