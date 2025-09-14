@@ -1,20 +1,59 @@
 {% extends 'base.html' %} {% block title %}编辑提示词 - 提示词管理平台{%
 endblock %} {% block styles %}
 <style>
-  .tag-badge {
-    margin-right: 5px;
-    margin-bottom: 5px;
-    display: inline-block;
+  /* 简化页面布局 */
+  .edit-page {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   }
 
-  /* 页面内容容器样式 */
-  .edit-prompt-container {
-    max-width: 1140px;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+  /* 突出表单标题 */
+  .form-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+  }
+
+  .form-section-title .required {
+    color: #dc3545;
+    margin-left: 0.25rem;
+  }
+
+  .form-section-title .icon {
+    margin-right: 0.5rem;
+    color: #6c757d;
+  }
+
+  /* 表单组样式 */
+  .form-group {
+    margin-bottom: 2rem;
+  }
+
+  .form-group .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-group .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .form-group .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
   }
 
   /* 标签样式 */
@@ -28,11 +67,12 @@ endblock %} {% block styles %}
   .tag-item {
     display: inline-flex;
     align-items: center;
-    background-color: var(--primary-light);
-    color: var(--primary-color);
+    background-color: #e3f2fd;
+    color: #1976d2;
     padding: 0.35rem 0.75rem;
-    border-radius: 2rem;
+    border-radius: 20px;
     font-size: 0.85rem;
+    border: 1px solid #bbdefb;
   }
 
   .remove-tag {
@@ -43,221 +83,214 @@ endblock %} {% block styles %}
     justify-content: center;
     width: 1.2rem;
     height: 1.2rem;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(25, 118, 210, 0.1);
     border-radius: 50%;
+    color: #1976d2;
   }
 
   .remove-tag:hover {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(25, 118, 210, 0.2);
   }
 
-  /* 按钮样式优化 */
-  .action-buttons {
+  /* 按钮区域 */
+  .form-actions {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
     justify-content: space-between;
     align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
   }
 
-  .action-buttons .left-buttons {
+  .form-actions .btn-group {
     display: flex;
     gap: 0.75rem;
   }
 
   /* 移动端适配 */
   @media (max-width: 768px) {
-    .edit-prompt-container {
-      padding: 1.25rem;
+    .edit-page {
+      margin: 1rem;
+      padding: 1.5rem;
     }
 
-    h1 {
-      font-size: 1.5rem;
-    }
-
-    .action-buttons {
+    .form-actions {
       flex-direction: column-reverse;
-      align-items: stretch;
-      width: 100%;
+      gap: 1rem;
     }
 
-    .action-buttons .left-buttons {
-      display: flex;
+    .form-actions .btn-group {
+      width: 100%;
       flex-direction: column;
+    }
+
+    .form-actions .btn {
       width: 100%;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-    }
-
-    .action-buttons .btn {
-      width: 100%;
-      margin: 0 !important;
-      padding: 0.6rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .form-label {
-      font-weight: 500;
-    }
-
-    /* 优化表单间距 */
-    .mb-3 {
-      margin-bottom: 1.25rem !important;
     }
   }
 </style>
 {% endblock %} {% block content %}
-<div class="container mt-4 mb-5">
-  <div class="edit-prompt-container">
-    <div class="row mb-4">
-      <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center">
-          <h1 class="mb-0">编辑提示词</h1>
-        </div>
-        <hr />
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-body">
-            <form method="POST" action="/edit-prompt/{{ prompt.id }}">
-              <div class="mb-3">
-                <label for="title" class="form-label"
-                  >标题 <span class="text-danger">*</span></label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="title"
-                  name="title"
-                  value="{{ prompt.title }}"
-                  required
-                />
-              </div>
-
-              <div class="mb-3">
-                <label for="description" class="form-label">描述</label>
-                <textarea
-                  class="form-control"
-                  id="description"
-                  name="description"
-                  rows="2"
-                >
-{{ prompt.description }}</textarea
-                >
-                <div class="form-text">简要描述这个提示词的用途和使用场景</div>
-              </div>
-
-              <div class="mb-3">
-                <label for="content" class="form-label"
-                  >内容 <span class="text-danger">*</span></label
-                >
-                <textarea
-                  class="form-control"
-                  id="content"
-                  name="content"
-                  rows="10"
-                  required
-                >
-{{ prompt.content }}</textarea
-                >
-                <div class="form-text">提示词的完整内容</div>
-              </div>
-
-              <div class="mb-3">
-                <label for="version" class="form-label"
-                  >版本号 <span class="text-danger">*</span></label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="version"
-                  name="version"
-                  value="{{ prompt.version }}"
-                  placeholder="例如: 1.0, 2.1"
-                  required
-                />
-                <div class="form-text">提示词的版本信息</div>
-              </div>
-
-              <div class="mb-3">
-                <label for="tagInput" class="form-label">标签</label>
-                <div class="tag-input">
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="tagInput"
-                    placeholder="添加标签并按回车，用逗号分隔多个标签"
-                  />
-                </div>
-                <div class="form-text">
-                  <i class="bi bi-info-circle me-1"></i>
-                  支持一次添加多个标签，用常见符号分隔，例如：AI,编程
-                  代码生成#翻译
-                </div>
-
-                <div class="tag-container" id="tagContainer">
-                  {% if current_tags %} {% for tag in current_tags.split(',') %}
-                  <div class="tag-item">
-                    {{ tag.strip() }}
-                    <input
-                      type="hidden"
-                      name="tags"
-                      value="{{ tag.strip() }}"
-                    />
-                    <span class="remove-tag"><i class="bi bi-x"></i></span>
-                  </div>
-                  {% endfor %} {% endif %}
-                </div>
-              </div>
-
-              <div class="mb-3 form-check">
-                <input
-                  type="checkbox"
-                  class="form-check-input"
-                  id="is_public"
-                  name="is_public"
-                  {%
-                  if
-                  prompt.is_public
-                  %}checked{%
-                  endif
-                  %}
-                />
-                <label class="form-check-label" for="is_public">公开分享</label>
-                <div class="form-text">其他用户可以看到您的提示词</div>
-              </div>
-
-              <div class="action-buttons">
-                <div class="left-buttons">
-                  <a href="/my-prompts" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>返回
-                  </a>
-                  <a
-                    href="/delete-prompt/{{ prompt.id }}"
-                    class="btn btn-danger"
-                    onclick="return confirm('确定要删除这个提示词吗？此操作不可恢复。')"
-                  >
-                    <i class="bi bi-trash me-2"></i>删除提示词
-                  </a>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                  <i class="bi bi-save me-2"></i>保存更改
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="edit-page">
+  <div class="text-center mb-4">
+    <h1 class="h2 mb-0">编辑提示词</h1>
+    <p class="text-muted mt-2">修改您的提示词内容和设置</p>
   </div>
+  <form method="POST" action="/edit-prompt/{{ prompt.id }}">
+    <!-- 标题 -->
+    <div class="form-group">
+      <div class="form-section-title">
+        <i class="bi bi-type icon"></i>
+        标题
+        <span class="required">*</span>
+      </div>
+      <input
+        type="text"
+        class="form-control"
+        id="title"
+        name="title"
+        value="{{ prompt.title }}"
+        placeholder="输入提示词标题"
+        required
+      />
+    </div>
+
+    <!-- 描述 -->
+    <div class="form-group">
+      <div class="form-section-title">
+        <i class="bi bi-card-text icon"></i>
+        描述
+      </div>
+      <textarea
+        class="form-control"
+        id="description"
+        name="description"
+        rows="3"
+        placeholder="简要描述这个提示词的用途和使用场景"
+      >
+{{ prompt.description }}</textarea
+      >
+    </div>
+
+    <!-- 内容 -->
+    <div class="form-group">
+      <div class="form-section-title">
+        <i class="bi bi-file-text icon"></i>
+        内容
+        <span class="required">*</span>
+      </div>
+      <textarea
+        class="form-control"
+        id="content"
+        name="content"
+        rows="12"
+        placeholder="输入提示词的完整内容"
+        required
+      >
+{{ prompt.content }}</textarea
+      >
+    </div>
+
+    <!-- 版本号 -->
+    <div class="form-group">
+      <div class="form-section-title">
+        <i class="bi bi-tag icon"></i>
+        版本号
+        <span class="required">*</span>
+      </div>
+      <input
+        type="text"
+        class="form-control"
+        id="version"
+        name="version"
+        value="{{ prompt.version }}"
+        placeholder="例如: 1.0, 2.1"
+        required
+      />
+    </div>
+
+    <!-- 标签 -->
+    <div class="form-group">
+      <div class="form-section-title">
+        <i class="bi bi-tags icon"></i>
+        标签
+      </div>
+      <input
+        type="text"
+        class="form-control"
+        id="tagInput"
+        placeholder="添加标签并按回车，用逗号分隔多个标签"
+      />
+      <div class="form-text mt-2">
+        <i class="bi bi-info-circle me-1"></i>
+        支持一次添加多个标签，用常见符号分隔，例如：AI,编程,代码生成#翻译
+      </div>
+      <div class="tag-container" id="tagContainer">
+        {% if current_tags %} {% for tag in current_tags.split(',') %}
+        <div class="tag-item">
+          {{ tag.strip() }}
+          <input type="hidden" name="tags" value="{{ tag.strip() }}" />
+          <span class="remove-tag"><i class="bi bi-x"></i></span>
+        </div>
+        {% endfor %} {% endif %}
+      </div>
+    </div>
+
+    <!-- 公开设置 -->
+    <div class="form-group">
+      <div class="form-section-title">
+        <i class="bi bi-globe icon"></i>
+        分享设置
+      </div>
+      <div class="form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="is_public"
+          name="is_public"
+          {%
+          if
+          prompt.is_public
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="is_public">
+          公开分享此提示词
+        </label>
+        <div class="form-text">其他用户可以看到和使用您的提示词</div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="form-actions">
+      <div class="btn-group">
+        <a href="/my-prompts" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-2"></i>返回
+        </a>
+        <a
+          href="#"
+          class="btn btn-outline-danger"
+          onclick="confirmDelete({{ prompt.id }})"
+        >
+          <i class="bi bi-trash me-2"></i>删除
+        </a>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="bi bi-save me-2"></i>保存更改
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %} {% block scripts %}
 <script>
+  // 删除确认函数
+  function confirmDelete(promptId) {
+    if (confirm("确定要删除这个提示词吗？此操作不可恢复。")) {
+      window.location.href = "/delete-prompt/" + promptId;
+    }
+    return false;
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     const tagInput = document.getElementById("tagInput");
     const tagContainer = document.getElementById("tagContainer");
