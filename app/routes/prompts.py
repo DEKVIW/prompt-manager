@@ -56,7 +56,7 @@ def create():
             for tag_field in tags_data:
                 if tag_field.strip():
                     # 支持多种分隔符：逗号、分号、空格、井号、斜杠、竖线、换行等
-                    separators = r'[,;，；\s\n#\/\|·\-_\+\*~`]+'
+                    separators = r'[,;，；、\s\n#\/\|·\-_\+\*~`]+'
                     split_tags = re.split(separators, tag_field)
                     all_tags.extend([tag.strip() for tag in split_tags if tag.strip()])
             
@@ -124,7 +124,7 @@ def edit(id):
             for tag_field in tags_data:
                 if tag_field.strip():
                     # 支持多种分隔符：逗号、分号、空格、井号、斜杠、竖线、换行等
-                    separators = r'[,;，；\s\n#\/\|·\-_\+\*~`]+'
+                    separators = r'[,;，；、\s\n#\/\|·\-_\+\*~`]+'
                     split_tags = re.split(separators, tag_field)
                     all_tags.extend([tag.strip() for tag in split_tags if tag.strip()])
             

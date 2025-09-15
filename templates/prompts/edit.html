@@ -222,7 +222,7 @@ endblock %} {% block styles %}
       />
       <div class="form-text mt-2">
         <i class="bi bi-info-circle me-1"></i>
-        支持一次添加多个标签，用常见符号分隔，例如：AI,编程,代码生成#翻译
+        支持一次添加多个标签，用常见符号分隔，例如：AI,编程,代码生成#翻译、AI；编程
       </div>
       <div class="tag-container" id="tagContainer">
         {% if current_tags %} {% for tag in current_tags.split(',') %}
@@ -330,7 +330,7 @@ endblock %} {% block styles %}
       if (input.trim() === "") return;
 
       // 支持多种分隔符：逗号、分号、空格、井号、斜杠、竖线、换行等
-      const separators = /[,;，；\s\n#\/\|·\-_\+\*~`]+/;
+      const separators = /[,;，；、\s\n#\/\|·\-_\+\*~`]+/;
       const tags = input.split(separators).filter((tag) => tag.trim() !== "");
 
       let addedCount = 0;
