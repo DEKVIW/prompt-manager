@@ -1,4 +1,4 @@
-# Python
+anz# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -50,4 +50,7 @@ static/img/covers/
 data/
 
 # 其他
-*.bak 
+*.bak
+
+# 文档和教程
+Git教程.md
