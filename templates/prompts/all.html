@@ -243,18 +243,23 @@ endblock %} {% block styles %}
 
     .prompt-header {
       padding: 1rem;
-      flex-direction: column;
-      align-items: flex-start;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
 
     .prompt-header .badge {
-      margin-top: 0.5rem;
+      margin-top: 0;
+      flex-shrink: 0;
     }
 
     .prompt-title {
       font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-      width: 100%;
+      margin-bottom: 0;
+      flex: 1;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;

@@ -43,10 +43,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 70%;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
+    flex: 1;
+    min-width: 0;
   }
 
   .prompt-body {
@@ -113,6 +111,46 @@
     min-width: 120px;
     text-align: center;
     flex-shrink: 0;
+  }
+
+  /* 移动端优化 */
+  @media (max-width: 767.98px) {
+    .prompt-header {
+      padding: 1rem;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .prompt-title {
+      font-size: 1.1rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .prompt-header .badge {
+      flex-shrink: 0;
+    }
+
+    .prompt-body {
+      padding: 1rem;
+    }
+
+    .prompt-footer {
+      padding: 0.75rem 1rem;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+    }
+
+    .prompt-footer .btn {
+      width: 100%;
+      min-width: auto;
+      padding: 0.7rem 1rem;
+      min-height: 44px;
+    }
   }
 
   .prompt-meta-item {
@@ -201,11 +239,6 @@
           </small>
           {% endif %}
         </h1>
-        {% if session.user_id %}
-        <a href="/create-prompt" class="btn btn-primary">
-          <i class="bi bi-plus-lg"></i> 创建提示词
-        </a>
-        {% endif %}
       </div>
       <hr />
     </div>
