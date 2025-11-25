@@ -17,16 +17,16 @@ fi
 # 确保权限正确
 chmod -R 777 $INSTANCE_DIR /app/logs
 
-# 确保上传目录存在
-mkdir -p /app/static/img/avatars
-chmod -R 777 /app/static/img/avatars
+# 确保上传目录存在（静态文件现在在 app/static/ 目录下）
+mkdir -p /app/app/static/img/avatars
+chmod -R 777 /app/app/static/img/avatars
 
 # 确保Nginx静态目录存在
 mkdir -p /var/www/html/static/img/avatars
 
 # 创建从应用上传目录到Nginx静态目录的软链接
 rm -rf /var/www/html/static/img/avatars
-ln -sf /app/static/img/avatars /var/www/html/static/img/
+ln -sf /app/app/static/img/avatars /var/www/html/static/img/
 
 # 配置Nginx
 if [ ! -f "/etc/nginx/sites-enabled/default" ]; then

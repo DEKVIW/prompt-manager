@@ -12,9 +12,9 @@ services:
     ports:
       - "5000:80"
     volumes:
-      - ./data:/app/instance
+      - ./instance:/app/instance
       - ./logs:/app/logs
-      - ./uploads:/app/static/img/avatars
+      - ./uploads:/app/app/static/img/avatars
     environment:
       - SECRET_KEY=${SECRET_KEY:-change_this_to_a_random_string}
       - FLASK_DEBUG=false

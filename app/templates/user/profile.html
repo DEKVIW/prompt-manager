@@ -283,7 +283,7 @@
           <h1 class="mb-1">{{ profile_user.username }}</h1>
           {% if session.user_id == profile_user.id %}
           <a
-            href="{{ url_for('edit_profile') }}"
+            href="{{ url_for('user.edit_profile') }}"
             class="btn btn-light edit-profile-btn"
           >
             <i class="bi bi-pencil me-md-2"></i

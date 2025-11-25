@@ -1,129 +1,152 @@
+"""
+管理员相关路由
+"""
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from app.database import get_db
+from app.utils.decorators import admin_required
 import random
 import string
-from flask import Blueprint, render_template, redirect, url_for, flash, abort, request
-from flask_login import login_required, current_user
-from app import db
-from app.forms import InviteCodeForm
-from app.models.user import User, InviteCode
+from flask import current_app
 
-admin = Blueprint('admin', __name__)
+bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-def require_admin(f):
-    """管理员权限装饰器"""
-    def decorated(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            abort(403)
-        return f(*args, **kwargs)
-    decorated.__name__ = f.__name__
-    return decorated
 
-def generate_invite_code(length=8):
-    """生成随机邀请码"""
-    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    code = ''.join(random.choice(chars) for _ in range(length))
-    return code
-
-@admin.route('/dashboard')
-@login_required
-@require_admin
-def dashboard():
-    # 获取统计数据
-    user_count = User.query.count()
-    admin_count = User.query.filter_by(is_admin=True).count()
+@bp.route('/invite-codes', methods=['GET', 'POST'])
+@admin_required
+def invite_codes():
+    """管理邀请码"""
+    db = get_db()
     
-    # 未使用的邀请码数
-    available_invites = InviteCode.query.filter_by(is_used=False).count()
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        
+        if action == 'generate':
+            quantity = int(request.form.get('quantity', 1))
+            
+            # 生成邀请码
+            for _ in range(quantity):
+                code = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(8))
+                db.execute(
+                    'INSERT INTO invite_codes (code, creator_id) VALUES (?, ?)',
+                    (code, session['user_id'])
+                )
+            
+            db.commit()
+            flash(f'成功生成 {quantity} 个邀请码', 'success')
     
-    # 最近注册的用户
-    recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
+    # 获取所有邀请码
+    invite_codes = db.execute(
+        'SELECT ic.*, u1.username as creator_username, u2.username as used_by_username '
+        'FROM invite_codes ic '
+        'LEFT JOIN users u1 ON ic.creator_id = u1.id '
+        'LEFT JOIN users u2 ON ic.used_by = u2.id '
+        'ORDER BY ic.created_at DESC'
+    ).fetchall()
     
-    return render_template('admin/dashboard.html',
-                           user_count=user_count,
-                           admin_count=admin_count,
-                           available_invites=available_invites,
-                           recent_users=recent_users)
+    return render_template('admin/invite_codes.html', invite_codes=invite_codes)
 
-@admin.route('/users')
-@login_required
-@require_admin
+
+@bp.route('/delete-invite-codes', methods=['POST'])
+@admin_required
+def delete_invite_codes():
+    """删除邀请码"""
+    db = get_db()
+    
+    code_ids = request.form.getlist('code_ids')
+    
+    if code_ids:
+        try:
+            placeholders = ','.join(['?'] * len(code_ids))
+            query = f'DELETE FROM invite_codes WHERE code IN ({placeholders})'
+            result = db.execute(query, code_ids)
+            deleted_count = result.rowcount
+            db.commit()
+            flash(f'成功删除 {deleted_count} 个邀请码', 'success')
+        except Exception as e:
+            db.rollback()
+            current_app.logger.error(f"删除邀请码出错: {str(e)}")
+            flash(f'删除邀请码时出错: {str(e)}', 'danger')
+    else:
+        flash('未选择任何邀请码', 'warning')
+    
+    return redirect(url_for('admin.invite_codes'))
+
+
+@bp.route('/users')
+@admin_required
 def users():
-    page = request.args.get('page', 1, type=int)
-    per_page = 20
+    """用户管理"""
+    db = get_db()
+    users = db.execute(
+        'SELECT * FROM users ORDER BY id'
+    ).fetchall()
     
-    # 获取所有用户
-    query = User.query.order_by(User.created_at.desc())
-    pagination = query.paginate(page=page, per_page=per_page)
-    users = pagination.items
-    
-    return render_template('admin/users.html', 
-                           users=users, 
-                           pagination=pagination)
+    return render_template('admin/users.html', users=users)
 
-@admin.route('/users/<int:id>/toggle-admin', methods=['POST'])
-@login_required
-@require_admin
-def toggle_admin(id):
-    user = User.query.get_or_404(id)
+
+@bp.route('/users/ban/<int:id>', methods=['POST'])
+@admin_required
+def ban_user(id):
+    """封禁/解封用户"""
+    db = get_db()
     
-    # 不能更改自己的管理员状态
-    if user.id == current_user.id:
-        flash('不能更改自己的管理员状态', 'danger')
+    user = db.execute('SELECT * FROM users WHERE id = ?', (id,)).fetchone()
+    if not user:
+        flash('用户不存在', 'danger')
         return redirect(url_for('admin.users'))
     
-    user.is_admin = not user.is_admin
-    db.session.commit()
+    if user['is_admin']:
+        flash('不能封禁管理员账号', 'danger')
+        return redirect(url_for('admin.users'))
     
-    status = '授予' if user.is_admin else '移除'
-    flash(f'已{status} {user.username} 的管理员权限', 'success')
+    is_banned = request.form.get('is_banned') == '1'
+    
+    # 检查字段是否存在
+    if 'is_banned' not in [column[1] for column in db.execute('PRAGMA table_info(users)').fetchall()]:
+        db.execute('ALTER TABLE users ADD COLUMN is_banned BOOLEAN DEFAULT 0')
+    
+    db.execute('UPDATE users SET is_banned = ? WHERE id = ?', (is_banned, id))
+    db.commit()
+    
+    if is_banned:
+        flash(f'用户 {user["username"]} 已被封禁', 'success')
+    else:
+        flash(f'用户 {user["username"]} 已被解封', 'success')
     
     return redirect(url_for('admin.users'))
 
-@admin.route('/invite-codes', methods=['GET', 'POST'])
-@login_required
-@require_admin
-def invite_codes():
-    form = InviteCodeForm()
+
+@bp.route('/users/delete/<int:id>', methods=['POST'])
+@admin_required
+def delete_user(id):
+    """删除用户"""
+    db = get_db()
     
-    if form.validate_on_submit():
-        quantity = int(form.quantity.data)
+    user = db.execute('SELECT * FROM users WHERE id = ?', (id,)).fetchone()
+    if not user:
+        flash('用户不存在', 'danger')
+        return redirect(url_for('admin.users'))
+    
+    if user['is_admin']:
+        flash('不能删除管理员账号', 'danger')
+        return redirect(url_for('admin.users'))
+    
+    try:
+        # 删除用户创建的提示词
+        prompts = db.execute('SELECT id FROM prompts WHERE user_id = ?', (id,)).fetchall()
+        for prompt in prompts:
+            db.execute('DELETE FROM tags_prompts WHERE prompt_id = ?', (prompt['id'],))
         
-        # 生成邀请码
-        new_codes = []
-        for _ in range(quantity):
-            while True:
-                code = generate_invite_code()
-                # 确保邀请码唯一
-                if not InviteCode.query.filter_by(code=code).first():
-                    break
-            
-            invite = InviteCode(code=code, creator_id=current_user.id)
-            db.session.add(invite)
-            new_codes.append(invite)
+        db.execute('DELETE FROM prompts WHERE user_id = ?', (id,))
+        db.execute('UPDATE invite_codes SET used_by = NULL WHERE used_by = ?', (id,))
+        db.execute('DELETE FROM users WHERE id = ?', (id,))
+        db.commit()
         
-        db.session.commit()
-        flash(f'成功生成 {quantity} 个邀请码', 'success')
+        flash(f'用户 {user["username"]} 及其所有内容已被删除', 'success')
+    except Exception as e:
+        db.rollback()
+        current_app.logger.error(f'删除用户时出错: {str(e)}')
+        flash(f'删除用户时出错: {str(e)}', 'danger')
     
-    # 获取所有邀请码
-    page = request.args.get('page', 1, type=int)
-    per_page = 20
-    
-    # 使用联接查询加载用户信息
-    query = InviteCode.query
-    pagination = query.paginate(page=page, per_page=per_page)
-    invite_codes = pagination.items
-    
-    # 加载每个邀请码的使用者信息
-    for code in invite_codes:
-        if code.is_used and code.used_by:
-            user = User.query.get(code.used_by)
-            if user:
-                code.used_by_username = user.username
-            else:
-                code.used_by_username = "未知用户"
-        else:
-            code.used_by_username = None
-    
-    return render_template('admin/invite_codes.html', 
-                           form=form,
-                           invite_codes=invite_codes, 
-                           pagination=pagination) 
+    return redirect(url_for('admin.users'))
+

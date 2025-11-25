@@ -1,93 +1,437 @@
 {% extends 'base.html' %} {% block title %}创建提示词 - 提示词管理平台{%
-endblock %} {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-8">
-    <div class="card-form">
-      <h2 class="text-center mb-4">创建新提示词</h2>
+endblock %} {% block styles %}
+<style>
+  /* 页面内容容器样式 */
+  .prompt-form-container {
+    max-width: 960px;
+    margin: 1.5rem auto;
+    padding: 1rem;
+  }
 
-      <form
-        method="POST"
-        action="{{ url_for('prompts.create') }}"
-        enctype="multipart/form-data"
-      >
-        {{ form.hidden_tag() }}
+  .prompt-form-card {
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    background-color: rgba(255, 255, 255, 0.95);
+    overflow: hidden;
+  }
 
-        <div class="mb-3">
-          {{ form.title.label(class="form-label") }} {% if form.title.errors %}
-          {{ form.title(class="form-control is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.title.errors %} {{ error }} {% endfor %}
+  .form-header {
+    background: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--secondary-color)
+    );
+    color: white;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .form-header::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><g fill="none" fill-rule="evenodd"><path d="M36 34v-4l-2-2V24v-2l2-2v-4l-2-2V8l4-4 4 4v6l-2 2v4l2 2v2l-2 2v4l2 2v6l-4 4-4-4v-6l2-2zm0-4l2-2v-4l-2-2v-4l2-2V8l-2-2-2 2v6l2 2v4l-2 2v4l2 2v6l2 2 2-2v-6l-2-2v-4z" fill="rgba(255, 255, 255, 0.1)" fill-opacity="0.5"/></g></svg>');
+    opacity: 0.3;
+    z-index: 0;
+  }
+
+  .form-header h2 {
+    position: relative;
+    z-index: 1;
+  }
+
+  .prompt-body {
+    padding: 1.75rem;
+  }
+
+  .tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .tag-item {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border-radius: 30px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .tag-item .remove-tag {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    transition: background-color 0.2s;
+  }
+
+  .tag-item .remove-tag:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .tag-input {
+    width: 100%;
+    display: flex;
+  }
+
+  .tag-input input {
+    flex-grow: 1;
+    margin-right: 0.5rem;
+  }
+
+  textarea.form-control {
+    min-height: 120px;
+  }
+
+  #promptContent {
+    min-height: 200px;
+    font-family: monospace;
+  }
+
+  /* 按钮样式优化 */
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  @media (max-width: 768px) {
+    .prompt-form-container {
+      margin: 0.75rem auto;
+      padding: 0.5rem;
+    }
+
+    .prompt-body {
+      padding: 1.25rem;
+    }
+
+    .form-header {
+      padding: 1.25rem;
+    }
+
+    .form-header h2 {
+      font-size: 1.5rem;
+    }
+
+    /* 优化表单间距 */
+    .mb-3,
+    .mb-4 {
+      margin-bottom: 1.25rem !important;
+    }
+
+    .form-label {
+      font-weight: 500;
+    }
+
+    /* 优化按钮布局 */
+    .action-buttons {
+      flex-direction: column-reverse;
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .action-buttons .btn {
+      width: 100%;
+      margin: 0 !important;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container mt-4 mb-5">
+  <div class="prompt-form-container">
+    <div class="card prompt-form-card">
+      <div class="form-header">
+        <h2 class="m-0">
+          <i class="bi bi-plus-circle me-2"></i>{% if prompt %}编辑提示词{% else
+          %}创建新提示词{% endif %}
+        </h2>
+      </div>
+
+      <div class="prompt-body">
+        <form
+          method="POST"
+          action="{% if prompt %}/prompts/{{ prompt.id }}/edit{% else %}/prompts/create{% endif %}"
+          id="promptForm"
+        >
+          <div class="mb-3">
+            <label for="title" class="form-label fw-bold">标题</label>
+            <input
+              type="text"
+              class="form-control"
+              id="title"
+              name="title"
+              placeholder="输入提示词标题"
+              value="{% if prompt %}{{ prompt.title }}{% endif %}"
+              required
+            />
           </div>
-          {% else %} {{ form.title(class="form-control") }} {% endif %}
-        </div>
 
-        <div class="mb-3">
-          {{ form.content.label(class="form-label") }} {% if form.content.errors
-          %} {{ form.content(class="form-control is-invalid", rows=10) }}
-          <div class="invalid-feedback">
-            {% for error in form.content.errors %} {{ error }} {% endfor %}
+          <div class="mb-3">
+            <label for="description" class="form-label fw-bold">简要描述</label>
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              placeholder="简要描述这个提示词的用途..."
+              required
+            >
+{% if prompt %}{{ prompt.description }}{% endif %}</textarea
+            >
           </div>
-          {% else %} {{ form.content(class="form-control", rows=10) }} {% endif
-          %}
-          <div class="form-text">输入提示词的完整内容</div>
-        </div>
 
-        <div class="mb-3">
-          {{ form.description.label(class="form-label") }} {% if
-          form.description.errors %} {{ form.description(class="form-control
-          is-invalid", rows=3) }}
-          <div class="invalid-feedback">
-            {% for error in form.description.errors %} {{ error }} {% endfor %}
+          <div class="mb-3">
+            <label for="promptContent" class="form-label fw-bold"
+              >提示词内容</label
+            >
+            <textarea
+              class="form-control"
+              id="promptContent"
+              name="content"
+              placeholder="在这里粘贴或输入您的提示词内容..."
+              required
+            >
+{% if prompt %}{{ prompt.content }}{% endif %}</textarea
+            >
           </div>
-          {% else %} {{ form.description(class="form-control", rows=3) }} {%
-          endif %}
-          <div class="form-text">简要描述这个提示词的用途和特点</div>
-        </div>
 
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            {{ form.version.label(class="form-label") }} {% if
-            form.version.errors %} {{ form.version(class="form-control
-            is-invalid") }}
-            <div class="invalid-feedback">
-              {% for error in form.version.errors %} {{ error }} {% endfor %}
+          <div class="mb-3">
+            <label for="version" class="form-label fw-bold">版本号</label>
+            <input
+              type="text"
+              class="form-control"
+              id="version"
+              name="version"
+              placeholder="例如: 1.0, 2.1"
+              value="{% if prompt %}{{ prompt.version }}{% else %}1.0{% endif %}"
+              required
+            />
+            <div class="form-text">提示词的版本信息，默认为1.0</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-bold">标签</label>
+            <div class="tag-input">
+              <input
+                type="text"
+                class="form-control"
+                id="tagInput"
+                placeholder="添加标签并按回车，用逗号分隔多个标签"
+              />
             </div>
-            {% else %} {{ form.version(class="form-control") }} {% endif %}
-          </div>
-
-          <div class="col-md-6 mb-3">
-            {{ form.tags.label(class="form-label") }} {% if form.tags.errors %}
-            {{ form.tags(class="form-control is-invalid") }}
-            <div class="invalid-feedback">
-              {% for error in form.tags.errors %} {{ error }} {% endfor %}
+            <div class="form-text">
+              <i class="bi bi-info-circle me-1"></i>
+              支持一次添加多个标签，用常见符号分隔，例如：AI,编程
+              代码生成#翻译、AI；编程
             </div>
-            {% else %} {{ form.tags(class="form-control") }} {% endif %}
-            <div class="form-text">多个标签请用逗号分隔</div>
+
+            <div class="tag-container" id="tagContainer">
+              {% if prompt and prompt.tags %} {% for tag in prompt.tags %}
+              <div class="tag-item">
+                {{ tag }}
+                <input type="hidden" name="tags" value="{{ tag }}" />
+                <span class="remove-tag"><i class="bi bi-x"></i></span>
+              </div>
+              {% endfor %} {% endif %}
+            </div>
           </div>
-        </div>
 
-        <div class="mb-3">
-          {{ form.cover_image.label(class="form-label") }} {% if
-          form.cover_image.errors %} {{ form.cover_image(class="form-control
-          is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.cover_image.errors %} {{ error }} {% endfor %}
+          <div class="mb-4">
+            <label class="form-check-label fw-bold">
+              <input
+                type="checkbox"
+                class="form-check-input me-2"
+                id="isPublic"
+                name="is_public"
+                {%
+                if
+                prompt
+                and
+                prompt.is_public
+                %}checked{%
+                endif
+                %}
+              />
+              公开此提示词
+            </label>
+            <div class="form-text">公开的提示词可以被其他用户查看和使用</div>
           </div>
-          {% else %} {{ form.cover_image(class="form-control") }} {% endif %}
-          <div class="form-text">支持JPG、PNG格式的图片</div>
-        </div>
 
-        <div class="mb-4 form-check">
-          {{ form.is_public(class="form-check-input") }} {{
-          form.is_public.label(class="form-check-label") }}
-          <div class="form-text">公开的提示词将对所有用户可见</div>
-        </div>
-
-        <div class="d-grid gap-2">
-          {{ form.submit(class="btn btn-primary") }}
-        </div>
-      </form>
+          <div class="action-buttons">
+            <a
+              href="{% if prompt %}/prompts/{{ prompt.id }}{% else %}/my-prompts{% endif %}"
+              class="btn btn-outline-secondary"
+            >
+              <i class="bi bi-arrow-left me-2"></i>返回
+            </a>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="bi bi-save me-2"></i>{% if prompt %}更新{% else %}保存{%
+              endif %}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tagInput = document.getElementById("tagInput");
+    const tagContainer = document.getElementById("tagContainer");
+    const promptForm = document.getElementById("promptForm");
+
+    // 添加单个标签函数
+    function addSingleTag(tagText) {
+      if (tagText.trim() === "") return false;
+
+      // 检查标签是否已存在
+      const existingTags = Array.from(
+        tagContainer.querySelectorAll(".tag-item input")
+      ).map((input) => input.value);
+      if (existingTags.includes(tagText.trim())) return false;
+
+      const tagItem = document.createElement("div");
+      tagItem.className = "tag-item";
+      tagItem.innerHTML = `
+        ${tagText.trim()}
+        <input type="hidden" name="tags" value="${tagText.trim()}">
+        <span class="remove-tag"><i class="bi bi-x"></i></span>
+      `;
+
+      tagContainer.appendChild(tagItem);
+
+      // 添加删除标签事件
+      tagItem
+        .querySelector(".remove-tag")
+        .addEventListener("click", function () {
+          tagItem.remove();
+        });
+
+      return true;
+    }
+
+    // 添加多个标签函数
+    function addTags(input) {
+      if (input.trim() === "") return;
+
+      // 支持多种分隔符：逗号、分号、空格、井号、斜杠、竖线、换行等
+      const separators = /[,;，；、\s\n#\/\|·\-_\+\*~`]+/;
+      const tags = input.split(separators).filter((tag) => tag.trim() !== "");
+
+      let addedCount = 0;
+      tags.forEach((tag) => {
+        if (addSingleTag(tag)) {
+          addedCount++;
+        }
+      });
+
+      // 清空输入并聚焦
+      tagInput.value = "";
+      tagInput.focus();
+
+      // 只在标签重复或格式错误时显示警告
+      if (addedCount === 0 && tags.length > 0) {
+        showTagFeedback("标签已存在或格式不正确", "warning");
+      }
+    }
+
+    // 显示标签操作反馈
+    function showTagFeedback(message, type) {
+      const feedback = document.createElement("div");
+      feedback.className = `alert alert-${type} alert-dismissible fade show mt-2`;
+      feedback.style.fontSize = "0.85rem";
+      feedback.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+      `;
+
+      const tagInput = document.getElementById("tagInput");
+      tagInput.parentNode.insertBefore(feedback, tagInput.nextSibling);
+
+      // 3秒后自动消失
+      setTimeout(() => {
+        if (feedback.parentNode) {
+          feedback.remove();
+        }
+      }, 3000);
+    }
+
+    // 回车添加标签
+    tagInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addTags(this.value);
+      }
+    });
+
+    // 失去焦点时也尝试添加标签
+    tagInput.addEventListener("blur", function () {
+      if (this.value.trim() !== "") {
+        addTags(this.value);
+      }
+    });
+
+    // 删除现有标签
+    document.querySelectorAll(".tag-item .remove-tag").forEach((removeBtn) => {
+      removeBtn.addEventListener("click", function () {
+        this.closest(".tag-item").remove();
+      });
+    });
+
+    // 表单验证
+    if (promptForm) {
+      promptForm.addEventListener("submit", function (e) {
+        const title = document.getElementById("title");
+        const description = document.getElementById("description");
+        const content = document.getElementById("promptContent");
+
+        let hasError = false;
+
+        // 清除所有验证错误
+        [title, description, content].forEach((field) => {
+          field.classList.remove("is-invalid");
+        });
+
+        // 验证表单
+        if (!title.value.trim()) {
+          title.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (!description.value.trim()) {
+          description.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (!content.value.trim()) {
+          content.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (hasError) {
+          e.preventDefault();
+        }
+      });
+    }
+  });
+</script>
 {% endblock %}

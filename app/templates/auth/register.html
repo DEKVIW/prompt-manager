@@ -1,77 +1,235 @@
 {% extends 'base.html' %} {% block title %}注册 - 提示词管理平台{% endblock %}
-{% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card-form">
-      <h2 class="text-center mb-4">注册新账号</h2>
+{% block styles %}
+<style>
+  .register-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
 
-      <form method="POST" action="{{ url_for('auth.register') }}">
-        {{ form.hidden_tag() }}
+  .register-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+  }
 
-        <div class="mb-3">
-          {{ form.username.label(class="form-label") }} {% if
-          form.username.errors %} {{ form.username(class="form-control
-          is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.username.errors %} {{ error }} {% endfor %}
-          </div>
-          {% else %} {{ form.username(class="form-control") }} {% endif %}
-          <div class="form-text">用户名只能包含字母、数字和下划线</div>
+  .register-header {
+    background: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--primary-dark)
+    );
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .register-header .logo {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .register-body {
+    padding: 2rem;
+    background-color: #fff;
+  }
+
+  .form-floating {
+    margin-bottom: 1.25rem;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    cursor: pointer;
+    z-index: -10;
+  }
+
+  .requirements {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="register-container">
+  <div class="card register-card">
+    <div class="register-header">
+      <div class="logo">
+        <i class="bi bi-person-plus"></i>
+      </div>
+      <h2 class="mb-1">创建新账号</h2>
+      <p class="mb-0">加入提示词管理平台</p>
+    </div>
+
+    <div class="register-body">
+      <form method="POST" action="/register" id="registerForm">
+        <div class="form-floating mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="username"
+            name="username"
+            placeholder="用户名"
+            required
+          />
+          <label for="username"><i class="bi bi-person me-2"></i>用户名</label>
         </div>
 
-        <div class="mb-3">
-          {{ form.email.label(class="form-label") }} {% if form.email.errors %}
-          {{ form.email(class="form-control is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.email.errors %} {{ error }} {% endfor %}
-          </div>
-          {% else %} {{ form.email(class="form-control") }} {% endif %}
+        <div class="form-floating mb-3">
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            name="email"
+            placeholder="name@example.com"
+            required
+          />
+          <label for="email"><i class="bi bi-envelope me-2"></i>邮箱地址</label>
         </div>
 
-        <div class="mb-3">
-          {{ form.password.label(class="form-label") }} {% if
-          form.password.errors %} {{ form.password(class="form-control
-          is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.password.errors %} {{ error }} {% endfor %}
-          </div>
-          {% else %} {{ form.password(class="form-control") }} {% endif %}
-          <div class="form-text">密码长度必须至少为8个字符</div>
+        <div class="form-floating mb-1 position-relative">
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            name="password"
+            placeholder="******"
+            minlength="8"
+            required
+          />
+          <label for="password"><i class="bi bi-lock me-2"></i>密码</label>
+          <span
+            class="password-toggle"
+            onclick="togglePasswordVisibility('password', 'passwordToggleIcon')"
+          >
+            <i id="passwordToggleIcon" class="bi bi-eye-slash"></i>
+          </span>
         </div>
 
-        <div class="mb-3">
-          {{ form.password2.label(class="form-label") }} {% if
-          form.password2.errors %} {{ form.password2(class="form-control
-          is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.password2.errors %} {{ error }} {% endfor %}
-          </div>
-          {% else %} {{ form.password2(class="form-control") }} {% endif %}
+        <div class="form-floating mb-3 position-relative">
+          <input
+            type="password"
+            class="form-control"
+            id="password2"
+            name="password2"
+            placeholder="******"
+            required
+          />
+          <label for="password2"
+            ><i class="bi bi-lock-fill me-2"></i>确认密码</label
+          >
+          <span
+            class="password-toggle"
+            onclick="togglePasswordVisibility('password2', 'confirmPasswordToggleIcon')"
+          >
+            <i id="confirmPasswordToggleIcon" class="bi bi-eye-slash"></i>
+          </span>
         </div>
 
-        <div class="mb-3">
-          {{ form.invite_code.label(class="form-label") }} {% if
-          form.invite_code.errors %} {{ form.invite_code(class="form-control
-          is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.invite_code.errors %} {{ error }} {% endfor %}
-          </div>
-          {% else %} {{ form.invite_code(class="form-control") }} {% endif %}
-          <div class="form-text">需要邀请码才能注册</div>
+        <div class="form-floating mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="invite_code"
+            name="invite_code"
+            placeholder="邀请码"
+            required
+          />
+          <label for="invite_code"
+            ><i class="bi bi-ticket-perforated me-2"></i>邀请码</label
+          >
         </div>
 
-        <div class="d-grid gap-2">
-          {{ form.submit(class="btn btn-primary") }}
+        <div class="d-grid mb-4">
+          <button type="submit" class="btn btn-primary py-3">
+            <i class="bi bi-person-plus me-2"></i>注册
+          </button>
+        </div>
+
+        <div class="text-center">
+          <p class="mb-0">
+            已有账号？
+            <a href="/login" class="text-decoration-none fw-bold">立即登录</a>
+          </p>
         </div>
       </form>
-
-      <div class="text-center mt-4">
-        <p>
-          已有账号？
-          <a href="{{ url_for('auth.login') }}">立即登录</a>
-        </p>
-      </div>
     </div>
   </div>
 </div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const registerForm = document.getElementById("registerForm");
+
+    if (registerForm) {
+      registerForm.addEventListener("submit", function (e) {
+        const username = document.getElementById("username");
+        const email = document.getElementById("email");
+        const password = document.getElementById("password");
+        const confirmPassword = document.getElementById("password2");
+
+        // 清除所有验证错误
+        [username, email, password, confirmPassword].forEach((field) => {
+          if (field) field.classList.remove("is-invalid");
+        });
+
+        let hasError = false;
+
+        // 验证表单
+        if (!username.value) {
+          username.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (!email.value || !email.value.includes("@")) {
+          email.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (!password.value || password.value.length < 8) {
+          password.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (
+          !confirmPassword.value ||
+          confirmPassword.value !== password.value
+        ) {
+          confirmPassword.classList.add("is-invalid");
+          hasError = true;
+        }
+
+        if (hasError) {
+          e.preventDefault();
+        }
+      });
+
+      // 移除验证错误样式当输入内容时
+      const inputs = registerForm.querySelectorAll("input");
+      inputs.forEach((input) => {
+        input.addEventListener("input", function () {
+          this.classList.remove("is-invalid");
+        });
+      });
+    }
+  });
+
+  // 添加密码显示切换功能
+  function togglePasswordVisibility(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      icon.classList.replace("bi-eye-slash", "bi-eye");
+    } else {
+      passwordInput.type = "password";
+      icon.classList.replace("bi-eye", "bi-eye-slash");
+    }
+  }
+</script>
 {% endblock %}

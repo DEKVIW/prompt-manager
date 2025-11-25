@@ -1,49 +1,166 @@
 {% extends 'base.html' %} {% block title %}登录 - 提示词管理平台{% endblock %}
-{% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card-form">
-      <h2 class="text-center mb-4">登录</h2>
+{% block styles %}
+<style>
+  .login-container {
+    max-width: 450px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
 
-      <form method="POST" action="{{ url_for('auth.login') }}">
-        {{ form.hidden_tag() }}
+  .login-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+  }
 
-        <div class="mb-3">
-          {{ form.email.label(class="form-label") }} {% if form.email.errors %}
-          {{ form.email(class="form-control is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.email.errors %} {{ error }} {% endfor %}
-          </div>
-          {% else %} {{ form.email(class="form-control") }} {% endif %}
+  .login-header {
+    background: linear-gradient(
+      135deg,
+      var(--primary-color),
+      var(--primary-dark)
+    );
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .login-header .logo {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .login-body {
+    padding: 2rem;
+    background-color: #fff;
+  }
+
+  .form-floating {
+    margin-bottom: 1.25rem;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    cursor: pointer;
+    z-index: -10;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="login-container">
+  <div class="card login-card">
+    <div class="login-header">
+      <div class="logo">
+        <i class="bi bi-magic"></i>
+      </div>
+      <h2 class="mb-1">欢迎回来</h2>
+      <p class="mb-0">登录您的提示词管理平台账号</p>
+    </div>
+
+    <div class="login-body">
+      <form method="POST" action="/login" id="loginForm">
+        <div class="form-floating mb-3">
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            name="email"
+            placeholder="name@example.com"
+            required
+          />
+          <label for="email"><i class="bi bi-envelope me-2"></i>邮箱地址</label>
         </div>
 
-        <div class="mb-3">
-          {{ form.password.label(class="form-label") }} {% if
-          form.password.errors %} {{ form.password(class="form-control
-          is-invalid") }}
-          <div class="invalid-feedback">
-            {% for error in form.password.errors %} {{ error }} {% endfor %}
-          </div>
-          {% else %} {{ form.password(class="form-control") }} {% endif %}
+        <div class="form-floating mb-3 position-relative">
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            name="password"
+            placeholder="******"
+            required
+          />
+          <label for="password"><i class="bi bi-lock me-2"></i>密码</label>
+          <span
+            class="password-toggle"
+            onclick="togglePasswordVisibility('password', 'passwordToggleIcon')"
+          >
+            <i id="passwordToggleIcon" class="bi bi-eye-slash"></i>
+          </span>
         </div>
 
-        <div class="mb-3 form-check">
-          {{ form.remember_me(class="form-check-input") }} {{
-          form.remember_me.label(class="form-check-label") }}
+        <div class="form-check mb-3">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            id="remember"
+            name="remember"
+          />
+          <label class="form-check-label" for="remember">记住我</label>
         </div>
 
-        <div class="d-grid gap-2">
-          {{ form.submit(class="btn btn-primary") }}
+        <div class="d-grid mb-4">
+          <button type="submit" class="btn btn-primary py-3">
+            <i class="bi bi-box-arrow-in-right me-2"></i>登录
+          </button>
+        </div>
+
+        <div class="text-center">
+          <p class="mb-0">
+            还没有账号？
+            <a href="/register" class="text-decoration-none fw-bold"
+              >立即注册</a
+            >
+          </p>
         </div>
       </form>
-
-      <div class="text-center mt-4">
-        <p>
-          还没有账号？
-          <a href="{{ url_for('auth.register') }}">立即注册</a>
-        </p>
-      </div>
     </div>
   </div>
 </div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const loginForm = document.getElementById("loginForm");
+
+    if (loginForm) {
+      loginForm.addEventListener("submit", function (e) {
+        const email = document.getElementById("email");
+        const password = document.getElementById("password");
+
+        if (!email.value || !password.value) {
+          e.preventDefault();
+          if (!email.value) {
+            email.classList.add("is-invalid");
+          }
+          if (!password.value) {
+            password.classList.add("is-invalid");
+          }
+        }
+      });
+
+      // 移除验证错误样式当输入内容时
+      const inputs = loginForm.querySelectorAll("input");
+      inputs.forEach((input) => {
+        input.addEventListener("input", function () {
+          this.classList.remove("is-invalid");
+        });
+      });
+    }
+  });
+
+  // 添加密码显示切换功能
+  function togglePasswordVisibility(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      icon.classList.replace("bi-eye-slash", "bi-eye");
+    } else {
+      passwordInput.type = "password";
+      icon.classList.replace("bi-eye", "bi-eye-slash");
+    }
+  }
+</script>
 {% endblock %}

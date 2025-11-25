@@ -1,16 +1,12 @@
-from app import app, db
-from app.models.user import User, InviteCode
-from app.models.prompt import Prompt, Tag
+"""
+开发环境运行入口
+"""
+import os
+from app import create_app
 
-@app.shell_context_processor
-def make_shell_context():
-    return {
-        'db': db, 
-        'User': User, 
-        'InviteCode': InviteCode,
-        'Prompt': Prompt,
-        'Tag': Tag
-    }
+app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug_mode, host='0.0.0.0')
+

@@ -1,4 +1,4 @@
-anz# Python
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -52,5 +52,4 @@ data/
 # 其他
 *.bak
 
-# 文档和教程
-Git教程.md
+# 文档和教程（已删除 Git教程.md）

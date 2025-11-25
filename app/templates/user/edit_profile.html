@@ -168,7 +168,7 @@ endblock %} {% block styles %}
         >
           <form
             method="POST"
-            action="{{ url_for('edit_profile') }}"
+            action="{{ url_for('user.edit_profile') }}"
             id="profile-form"
             enctype="multipart/form-data"
           >
@@ -239,7 +239,7 @@ endblock %} {% block styles %}
 
             <div class="text-end">
               <a
-                href="{{ url_for('profile', user_id=session.user_id) }}"
+                href="{{ url_for('user.profile', user_id=session.user_id) }}"
                 class="btn btn-outline-secondary me-2"
               >
                 <i class="bi bi-x-circle me-1"></i>取消
@@ -259,7 +259,7 @@ endblock %} {% block styles %}
         >
           <form
             method="POST"
-            action="{{ url_for('edit_profile') }}"
+            action="{{ url_for('user.edit_profile') }}"
             id="password-form"
           >
             <input type="hidden" name="username" value="{{ user.username }}" />
@@ -330,7 +330,7 @@ endblock %} {% block styles %}
 
             <div class="text-end">
               <a
-                href="{{ url_for('profile', user_id=session.user_id) }}"
+                href="{{ url_for('user.profile', user_id=session.user_id) }}"
                 class="btn btn-outline-secondary me-2"
               >
                 <i class="bi bi-x-circle me-1"></i>取消

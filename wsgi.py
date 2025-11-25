@@ -12,7 +12,9 @@ if os.environ.get('FLASK_DEBUG', 'False').lower() == 'true':
     print("警告：当前以调试模式运行WSGI应用。在生产环境中应禁用调试模式。")
 
 # 导入应用
-from simple_app import app
+from app import create_app
+
+app = create_app()
 
 # 仅用于直接运行此文件时
 if __name__ == "__main__":

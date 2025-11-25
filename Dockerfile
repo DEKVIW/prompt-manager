@@ -11,7 +11,7 @@ RUN apt-get update && \
 WORKDIR /app
 
 # 创建必要的目录
-RUN mkdir -p /app/instance /app/logs /app/instance_init /app/static && \
+RUN mkdir -p /app/instance /app/logs /app/instance_init && \
     chmod -R 777 /app/instance /app/logs
 
 # 安装Python依赖
@@ -22,9 +22,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # 复制应用代码
 COPY . /app/
 
-# 为Nginx配置静态文件
+# 为Nginx配置静态文件（静态文件现在在 app/static/ 目录下）
 RUN mkdir -p /var/www/html/static && \
-    cp -r /app/static/* /var/www/html/static/ && \
+    cp -r /app/app/static/* /var/www/html/static/ && \
     chmod -R 755 /var/www/html/static
 
 # 配置Nginx
@@ -32,7 +32,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN rm /etc/nginx/sites-enabled/default || true
 
 # 初始化数据库
-RUN python simple_db.py && \
+RUN python init_db.py && \
     cp -r /app/instance/* /app/instance_init/
 
 # 设置环境变量
