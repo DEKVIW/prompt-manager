@@ -115,6 +115,19 @@ endblock %} {% block styles %}
     height: 100%;
     object-fit: cover;
   }
+
+  /* AI设置相关样式 */
+  .advanced-settings {
+    display: none;
+  }
+
+  .advanced-settings.show {
+    display: block;
+  }
+
+  .test-connection-btn {
+    margin-left: 0.5rem;
+  }
 </style>
 {% endblock %} {% block content %}
 <div class="profile-edit-container">
@@ -131,46 +144,51 @@ endblock %} {% block styles %}
       <ul class="nav nav-tabs" id="profileTabs" role="tablist">
         <li class="nav-item" role="presentation">
           <button
-            class="nav-link active"
+            class="nav-link {% if current_tab == 'basic' or not current_tab %}active{% endif %}"
             id="basic-tab"
             data-bs-toggle="tab"
             data-bs-target="#basic"
             type="button"
             role="tab"
             aria-controls="basic"
-            aria-selected="true"
+            aria-selected="{% if current_tab == 'basic' or not current_tab %}true{% else %}false{% endif %}"
           >
             <i class="bi bi-person-vcard me-2"></i>基本资料
           </button>
         </li>
         <li class="nav-item" role="presentation">
           <button
-            class="nav-link"
+            class="nav-link {% if current_tab == 'security' %}active{% endif %}"
             id="security-tab"
             data-bs-toggle="tab"
             data-bs-target="#security"
             type="button"
             role="tab"
             aria-controls="security"
-            aria-selected="false"
+            aria-selected="{% if current_tab == 'security' %}true{% else %}false{% endif %}"
           >
             <i class="bi bi-shield-lock me-2"></i>安全设置
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <a
-            class="nav-link"
-            href="{{ url_for('user.ai_settings') }}"
+          <button
+            class="nav-link {% if current_tab == 'ai' %}active{% endif %}"
+            id="ai-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#ai"
+            type="button"
             role="tab"
+            aria-controls="ai"
+            aria-selected="{% if current_tab == 'ai' %}true{% else %}false{% endif %}"
           >
             <i class="bi bi-robot me-2"></i>AI 设置
-          </a>
+          </button>
         </li>
       </ul>
 
       <div class="tab-content" id="profileTabContent">
         <div
-          class="tab-pane fade show active"
+          class="tab-pane fade {% if current_tab == 'basic' or not current_tab %}show active{% endif %}"
           id="basic"
           role="tabpanel"
           aria-labelledby="basic-tab"
@@ -261,7 +279,7 @@ endblock %} {% block styles %}
         </div>
 
         <div
-          class="tab-pane fade"
+          class="tab-pane fade {% if current_tab == 'security' %}show active{% endif %}"
           id="security"
           role="tabpanel"
           aria-labelledby="security-tab"
@@ -350,6 +368,176 @@ endblock %} {% block styles %}
             </div>
           </form>
         </div>
+
+        <div
+          class="tab-pane fade {% if current_tab == 'ai' %}show active{% endif %}"
+          id="ai"
+          role="tabpanel"
+          aria-labelledby="ai-tab"
+        >
+          <form
+            method="POST"
+            action="{{ url_for('user.edit_profile', tab='ai') }}"
+            id="aiSettingsForm"
+          >
+            <!-- AI 提供商配置 -->
+            <div class="form-section">
+              <h5 class="section-title">
+                <i class="bi bi-cloud me-2"></i>AI 提供商配置
+              </h5>
+
+              <div class="mb-3">
+                <label for="provider" class="form-label fw-bold">AI 提供商</label>
+                <select class="form-select" id="provider" name="provider" required>
+                  <option value="openai" {% if config and config.provider == 'openai' %}selected{% endif %}>
+                    OpenAI (GPT-3.5/GPT-4)
+                  </option>
+                  <option value="custom" {% if config and config.provider == 'custom' %}selected{% endif %}>
+                    自定义 API (兼容 OpenAI 格式)
+                  </option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="api_key" class="form-label fw-bold">
+                  API Key
+                  {% if config and config.api_key %}
+                  <span class="badge bg-success ms-2">已配置</span>
+                  {% endif %}
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="api_key"
+                  name="api_key"
+                  placeholder="{% if config and config.api_key %}留空保持原 Key，或输入新 Key 进行更新{% else %}输入您的 API Key{% endif %}"
+                  value=""
+                  autocomplete="off"
+                />
+                {% if config and config.api_key %}
+                <div class="form-text text-muted">
+                  <i class="bi bi-info-circle me-1"></i>
+                  已配置 API Key，留空将保持原 Key 不变
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="mb-3" id="baseUrlGroup" style="display: {% if config and config.provider == 'custom' %}block{% else %}none{% endif %};">
+                <label for="base_url" class="form-label fw-bold">基础 URL</label>
+                <input
+                  type="url"
+                  class="form-control"
+                  id="base_url"
+                  name="base_url"
+                  placeholder="https://api.openai.com/v1"
+                  value="{% if config and config.base_url %}{{ config.base_url }}{% endif %}"
+                />
+                <div class="form-text">
+                  自定义 API 的基础 URL（兼容 OpenAI 格式）
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="model" class="form-label fw-bold">模型</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="model"
+                  name="model"
+                  placeholder="gpt-3.5-turbo"
+                  value="{% if config and config.model %}{{ config.model }}{% else %}gpt-3.5-turbo{% endif %}"
+                  required
+                />
+                <div class="form-text">
+                  例如：gpt-3.5-turbo, gpt-4, gpt-4-turbo
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="testConnectionBtn">
+                  <i class="bi bi-wifi me-1"></i>测试连接
+                </button>
+                <span id="testResult" class="ms-2"></span>
+              </div>
+            </div>
+
+            <!-- 高级设置 -->
+            <div class="form-section">
+              <h5 class="section-title">
+                <i class="bi bi-sliders me-2"></i>
+                <span>高级设置</span>
+                <button
+                  type="button"
+                  class="btn btn-link btn-sm p-0 ms-2"
+                  id="toggleAdvanced"
+                  style="text-decoration: none; color: var(--text-muted)"
+                >
+                  <i class="bi bi-chevron-down" id="toggleAdvancedIcon"></i>
+                </button>
+              </h5>
+
+              <div class="advanced-settings" id="advancedSettings" style="display: none;">
+                <div class="mb-3">
+                  <label for="temperature" class="form-label fw-bold">温度 (Temperature)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="temperature"
+                    name="temperature"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value="{% if config and config.temperature %}{{ config.temperature }}{% else %}0.7{% endif %}"
+                  />
+                  <div class="form-text">控制输出的随机性，范围 0.0-2.0，默认 0.7</div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="max_tokens" class="form-label fw-bold">最大 Token 数</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="max_tokens"
+                    name="max_tokens"
+                    min="100"
+                    max="2000"
+                    value="{% if config and config.max_tokens %}{{ config.max_tokens }}{% else %}500{% endif %}"
+                  />
+                  <div class="form-text">生成内容的最大长度，范围 100-2000，默认 500</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 启用开关 -->
+            <div class="form-section">
+              <div class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="enabled"
+                  name="enabled"
+                  {% if not config or config.enabled %}checked{% endif %}
+                />
+                <label class="form-check-label fw-bold" for="enabled">
+                  启用 AI 自动填充功能
+                </label>
+              </div>
+            </div>
+
+            <!-- 提交按钮 -->
+            <div class="text-end">
+              <a
+                href="{{ url_for('user.profile', user_id=session.user_id) }}"
+                class="btn btn-outline-secondary me-2"
+              >
+                <i class="bi bi-x-circle me-1"></i>取消
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-1"></i>保存设置
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -412,33 +600,25 @@ endblock %} {% block styles %}
     }
   }
 
-  // 如果URL中有安全标签参数，自动激活该标签
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("tab") === "security") {
-    document.addEventListener("DOMContentLoaded", function () {
+  // 根据URL参数自动激活对应的标签
+  document.addEventListener("DOMContentLoaded", function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get("tab");
+    
+    if (tab === "security") {
       const securityTab = document.getElementById("security-tab");
       if (securityTab) {
-        const tab = new bootstrap.Tab(securityTab);
-        tab.show();
+        const bootstrapTab = new bootstrap.Tab(securityTab);
+        bootstrapTab.show();
       }
-    });
-  }
-
-  // 如果从 AI 设置页面返回，高亮 AI 设置标签
-  if (urlParams.get("from") === "ai-settings") {
-    document.addEventListener("DOMContentLoaded", function () {
-      const aiSettingsLink = document.querySelector('a[href*="ai-settings"]');
-      if (aiSettingsLink) {
-        aiSettingsLink.classList.add("active");
-        // 移除其他标签的 active 状态
-        document.querySelectorAll(".nav-link").forEach((link) => {
-          if (link !== aiSettingsLink && !link.href) {
-            link.classList.remove("active");
-          }
-        });
+    } else if (tab === "ai") {
+      const aiTab = document.getElementById("ai-tab");
+      if (aiTab) {
+        const bootstrapTab = new bootstrap.Tab(aiTab);
+        bootstrapTab.show();
       }
-    });
-  }
+    }
+  });
 
   // 头像预览
   document.getElementById("avatar").addEventListener("change", function (e) {
@@ -468,6 +648,102 @@ endblock %} {% block styles %}
       };
 
       reader.readAsDataURL(this.files[0]);
+    }
+  });
+
+  // AI设置相关脚本
+  document.addEventListener("DOMContentLoaded", function () {
+    const providerSelect = document.getElementById("provider");
+    const baseUrlGroup = document.getElementById("baseUrlGroup");
+    const toggleAdvanced = document.getElementById("toggleAdvanced");
+    const advancedSettings = document.getElementById("advancedSettings");
+    const testConnectionBtn = document.getElementById("testConnectionBtn");
+    const testResult = document.getElementById("testResult");
+
+    if (providerSelect && baseUrlGroup) {
+      // 切换提供商时显示/隐藏基础 URL
+      providerSelect.addEventListener("change", function () {
+        if (this.value === "custom") {
+          baseUrlGroup.style.display = "block";
+          const baseUrlInput = document.getElementById("base_url");
+          if (baseUrlInput) baseUrlInput.required = true;
+        } else {
+          baseUrlGroup.style.display = "none";
+          const baseUrlInput = document.getElementById("base_url");
+          if (baseUrlInput) baseUrlInput.required = false;
+        }
+      });
+    }
+
+    if (toggleAdvanced && advancedSettings) {
+      // 切换高级设置显示/隐藏
+      toggleAdvanced.addEventListener("click", function () {
+        const isVisible = advancedSettings.style.display === "block";
+        advancedSettings.style.display = isVisible ? "none" : "block";
+        const icon = document.getElementById("toggleAdvancedIcon");
+        if (icon) {
+          if (!isVisible) {
+            icon.classList.remove("bi-chevron-down");
+            icon.classList.add("bi-chevron-up");
+          } else {
+            icon.classList.remove("bi-chevron-up");
+            icon.classList.add("bi-chevron-down");
+          }
+        }
+      });
+    }
+
+    if (testConnectionBtn) {
+      // 测试连接
+      testConnectionBtn.addEventListener("click", async function () {
+        const provider = providerSelect ? providerSelect.value : "openai";
+        const apiKeyInput = document.getElementById("api_key");
+        const apiKey = apiKeyInput ? apiKeyInput.value.trim() : "";
+        const baseUrlInput = document.getElementById("base_url");
+        const baseUrl = baseUrlInput ? baseUrlInput.value.trim() || null : null;
+        const modelInput = document.getElementById("model");
+        const model = modelInput ? modelInput.value.trim() : "gpt-3.5-turbo";
+
+        testConnectionBtn.disabled = true;
+        testConnectionBtn.innerHTML =
+          '<span class="spinner-border spinner-border-sm me-1"></span>测试中...';
+        if (testResult) testResult.innerHTML = "";
+
+        try {
+          const response = await fetch("/api/ai/test-connection", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              provider: provider,
+              api_key: apiKey,
+              base_url: baseUrl,
+              model: model,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (testResult) {
+            if (data.success) {
+              testResult.innerHTML =
+                '<span class="text-success"><i class="bi bi-check-circle me-1"></i>连接成功</span>';
+            } else {
+              testResult.innerHTML =
+                '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>' +
+                (data.message || "连接失败") +
+                "</span>";
+            }
+          }
+        } catch (error) {
+          if (testResult) {
+            testResult.innerHTML =
+              '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>网络错误</span>';
+          }
+        } finally {
+          testConnectionBtn.disabled = false;
+          testConnectionBtn.innerHTML = '<i class="bi bi-wifi me-1"></i>测试连接';
+        }
+      });
     }
   });
 </script>

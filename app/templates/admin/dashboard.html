@@ -4,6 +4,7 @@ endblock %} {% block styles %}
   .admin-container {
     max-width: 1200px;
     margin: 2rem auto;
+    padding-top: 80px; /* 避免被导航栏遮挡 */
   }
 
   .page-header {
@@ -14,11 +15,10 @@ endblock %} {% block styles %}
     border-radius: 1rem;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     height: 100%;
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition: box-shadow 0.3s;
   }
 
   .dashboard-card:hover {
-    transform: translateY(-5px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   }
 

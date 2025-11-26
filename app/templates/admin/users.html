@@ -5,7 +5,12 @@
   .users-admin-container {
     max-width: 1140px;
     margin: 0 auto;
-    padding: 0 15px;
+    padding: 80px 15px 0 15px; /* 避免被导航栏遮挡 */
+  }
+
+  /* 禁用管理页面容器的hover上移效果 */
+  .users-admin-container .card:hover {
+    transform: none;
   }
 
   /* 表格响应式优化 */

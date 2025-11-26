@@ -12,6 +12,20 @@ if [ -z "$(ls -A $INSTANCE_DIR)" ]; then
   echo "数据库初始化完成！"
 else
   echo "检测到现有数据库，跳过初始化"
+  echo "执行数据库迁移以更新数据库结构..."
+  
+  # 执行所有迁移脚本（迁移脚本会检查表是否存在，可安全重复执行）
+  if [ -d "/app/migrations" ]; then
+    for migration in /app/migrations/*.py; do
+      if [ -f "$migration" ]; then
+        echo "执行迁移: $(basename $migration)"
+        python "$migration" || {
+          echo "警告: 迁移脚本 $(basename $migration) 执行失败，但继续启动..."
+        }
+      fi
+    done
+    echo "数据库迁移完成！"
+  fi
 fi
 
 # 确保权限正确
