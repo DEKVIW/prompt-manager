@@ -188,6 +188,16 @@ endblock %} {% block styles %}
       >
 {{ prompt.content }}</textarea
       >
+      <div class="mt-2 d-flex align-items-center gap-2">
+        <button
+          type="button"
+          class="btn btn-outline-primary btn-sm"
+          id="aiFillBtn"
+        >
+          <i class="bi bi-magic me-1"></i>AI 自动填充
+        </button>
+        <span id="aiFillStatus" class="ms-2"></span>
+      </div>
     </div>
 
     <!-- 版本号 -->
@@ -392,6 +402,113 @@ endblock %} {% block styles %}
         this.closest(".tag-item").remove();
       });
     });
+
+    // AI 自动填充功能
+    const aiFillBtn = document.getElementById("aiFillBtn");
+    const toggleAiConfig = document.getElementById("toggleAiConfig");
+    const aiConfigPanel = document.getElementById("aiConfigPanel");
+    const aiFillStatus = document.getElementById("aiFillStatus");
+    const contentTextarea = document.getElementById("content");
+    const titleInput = document.getElementById("title");
+    const descriptionInput = document.getElementById("description");
+
+    // 切换配置面板
+    if (toggleAiConfig) {
+      toggleAiConfig.addEventListener("click", function () {
+        if (aiConfigPanel.style.display === "none") {
+          aiConfigPanel.style.display = "block";
+          this.innerHTML = '<i class="bi bi-gear-fill me-1"></i>隐藏规则';
+        } else {
+          aiConfigPanel.style.display = "none";
+          this.innerHTML = '<i class="bi bi-gear me-1"></i>自定义规则';
+        }
+      });
+    }
+
+    // AI 自动填充
+    if (aiFillBtn) {
+      aiFillBtn.addEventListener("click", async function () {
+        const content = contentTextarea.value.trim();
+        if (!content) {
+          aiFillStatus.innerHTML =
+            '<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>请先输入提示词内容</span>';
+          setTimeout(() => {
+            aiFillStatus.innerHTML = "";
+          }, 3000);
+          return;
+        }
+
+        // 显示加载状态
+        aiFillBtn.disabled = true;
+        aiFillBtn.innerHTML =
+          '<span class="spinner-border spinner-border-sm me-1"></span>生成中...';
+        aiFillStatus.innerHTML = "";
+
+        try {
+          const response = await fetch("/api/ai/generate-metadata", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              content: content,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // 询问是否覆盖现有内容
+            let shouldUpdateTitle = true;
+            let shouldUpdateDescription = true;
+
+            if (titleInput.value.trim()) {
+              shouldUpdateTitle = confirm("标题已有内容，是否覆盖？");
+            }
+            if (descriptionInput.value.trim()) {
+              shouldUpdateDescription = confirm("描述已有内容，是否覆盖？");
+            }
+
+            // 填充表单
+            if (shouldUpdateTitle && titleInput) {
+              titleInput.value = data.title;
+            }
+            if (shouldUpdateDescription && descriptionInput) {
+              descriptionInput.value = data.description;
+            }
+
+            // 添加标签
+            if (data.tags && Array.isArray(data.tags)) {
+              data.tags.forEach((tag) => {
+                addSingleTag(tag);
+              });
+            }
+
+            aiFillStatus.innerHTML =
+              '<span class="text-success"><i class="bi bi-check-circle me-1"></i>自动填充成功！</span>';
+            setTimeout(() => {
+              aiFillStatus.innerHTML = "";
+            }, 3000);
+          } else {
+            aiFillStatus.innerHTML =
+              '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>' +
+              (data.message || "生成失败，请稍后重试") +
+              "</span>";
+            if (data.message && data.message.includes("未配置")) {
+              setTimeout(() => {
+                if (confirm("未配置 AI API，是否前往设置页面配置？")) {
+                  window.location.href = "/user/ai-settings";
+                }
+              }, 1000);
+            }
+          }
+        } catch (error) {
+          aiFillStatus.innerHTML =
+            '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>网络错误，请检查连接</span>';
+        } finally {
+          aiFillBtn.disabled = false;
+          aiFillBtn.innerHTML = '<i class="bi bi-magic me-1"></i>AI 自动填充';
+        }
+      });
+    }
   });
 </script>
 {% endblock %}

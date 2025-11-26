@@ -93,6 +93,147 @@
           padding-right: 15px;
         }
       }
+
+      /* Toast 通知容器样式 - 固定在顶部，不占据布局 */
+      .toast-notification-container {
+        position: fixed;
+        top: 80px; /* 导航栏下方 */
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        max-width: 500px;
+        width: calc(100% - 2rem);
+        pointer-events: none; /* 允许点击穿透到下方内容 */
+      }
+
+      /* Toast 通知项样式 */
+      .toast-notification {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        margin-bottom: 0.75rem;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        pointer-events: auto; /* 恢复点击事件 */
+        animation: toastSlideIn 0.3s ease-out;
+        border-left: 4px solid;
+        min-width: 300px;
+      }
+
+      /* 成功类型 */
+      .toast-notification.toast-success {
+        border-left-color: #28a745;
+      }
+
+      .toast-notification.toast-success .toast-icon {
+        color: #28a745;
+      }
+
+      /* 危险类型 */
+      .toast-notification.toast-danger {
+        border-left-color: #dc3545;
+      }
+
+      .toast-notification.toast-danger .toast-icon {
+        color: #dc3545;
+      }
+
+      /* 警告类型 */
+      .toast-notification.toast-warning {
+        border-left-color: #ffc107;
+      }
+
+      .toast-notification.toast-warning .toast-icon {
+        color: #ffc107;
+      }
+
+      /* 信息类型 */
+      .toast-notification.toast-info {
+        border-left-color: #17a2b8;
+      }
+
+      .toast-notification.toast-info .toast-icon {
+        color: #17a2b8;
+      }
+
+      .toast-icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+      }
+
+      .toast-message {
+        flex: 1;
+        font-size: 0.95rem;
+        color: #333;
+        line-height: 1.5;
+      }
+
+      .toast-close {
+        background: none;
+        border: none;
+        color: #6c757d;
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: color 0.2s;
+      }
+
+      .toast-close:hover {
+        color: #333;
+      }
+
+      /* 淡入动画 */
+      @keyframes toastSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* 淡出动画 */
+      .toast-notification.toast-fade-out {
+        animation: toastSlideOut 0.3s ease-in forwards;
+      }
+
+      @keyframes toastSlideOut {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+      }
+
+      /* 移动端适配 */
+      @media (max-width: 576px) {
+        .toast-notification-container {
+          width: calc(100% - 1rem);
+          top: 70px;
+        }
+
+        .toast-notification {
+          min-width: auto;
+          padding: 0.875rem 1rem;
+        }
+
+        .toast-message {
+          font-size: 0.875rem;
+        }
+      }
     </style>
     {% block styles %}{% endblock %}
   </head>
@@ -252,45 +393,41 @@
       </div>
     </nav>
 
-    <!-- 主内容区域 -->
-    <main>
-      <!-- 闪现消息 -->
-      <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %} {% if
-        messages %} {% for category, message in messages %}
-        <div
-          class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show"
-        >
-          {% if category == 'success' %}
-          <i class="bi bi-check-circle me-2"></i>
-          {% elif category == 'danger' %}
-          <i class="bi bi-exclamation-circle me-2"></i>
-          {% elif category == 'warning' %}
-          <i class="bi bi-exclamation-triangle me-2"></i>
-          {% else %}
-          <i class="bi bi-info-circle me-2"></i>
-          {% endif %} {{ message }}
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="alert"
-            aria-label="Close"
-          ></button>
-        </div>
-        {% endfor %} {% endif %} {% endwith %}
-      </div>
+    <!-- Toast 通知容器（固定在页面顶部，不占据布局） -->
+    <div id="toast-container" class="toast-notification-container"></div>
 
-      {% block content %}{% endblock %}
-    </main>
+    <!-- 主内容区域 -->
+    <main>{% block content %}{% endblock %}</main>
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- 添加时间戳参数避免缓存 -->
     <script src="{{ url_for('static', filename='js/main.js') }}?v={{ now.timestamp()|int }}"></script>
 
+    <!-- Flash 消息数据（供 JavaScript 使用） -->
+    <script>
+      // 将 Flash 消息传递给 JavaScript
+      window.flashMessages = [
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        { type: "{{ category if category != 'message' else 'info' }}", message: {{ message|tojson }} },
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+      ];
+    </script>
+
     <!-- 修复移动端滚动问题的脚本 -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
+        // 显示 Flash 消息为 Toast 通知
+        if (window.flashMessages && window.flashMessages.length > 0) {
+          window.flashMessages.forEach(function (item) {
+            showToastNotification(item.message, item.type);
+          });
+        }
+
         // 关闭导航栏折叠菜单（当点击导航项时）
         const navLinks = document.querySelectorAll(".navbar-nav .nav-link");
         const navbarCollapse = document.querySelector(".navbar-collapse");

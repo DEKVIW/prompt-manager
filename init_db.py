@@ -108,6 +108,34 @@ def init_db():
         )
         ''')
         
+        # 创建 AI 配置表
+        cursor.execute('''
+        CREATE TABLE ai_configs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            provider TEXT NOT NULL DEFAULT 'openai',
+            api_key TEXT NOT NULL,
+            base_url TEXT,
+            model TEXT DEFAULT 'gpt-3.5-turbo',
+            temperature REAL DEFAULT 0.7,
+            max_tokens INTEGER DEFAULT 500,
+            enabled BOOLEAN DEFAULT 1,
+            title_max_length INTEGER DEFAULT 30,
+            description_max_length INTEGER DEFAULT 100,
+            tag_count INTEGER DEFAULT 5,
+            tag_two_char_count INTEGER DEFAULT 0,
+            tag_four_char_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+        ''')
+        
+        # 创建索引
+        cursor.execute('''
+        CREATE INDEX idx_ai_configs_user_id ON ai_configs(user_id)
+        ''')
+        
         print("创建管理员账号...")
         
         # 创建管理员账号，使用 werkzeug.security 生成密码哈希

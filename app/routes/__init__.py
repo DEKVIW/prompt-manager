@@ -1,7 +1,7 @@
 """
 路由模块
 """
-from app.routes import main, auth, prompts, admin, user
+from app.routes import main, auth, prompts, admin, user, ai
 
 
 def register_blueprints(app):
@@ -11,4 +11,5 @@ def register_blueprints(app):
     app.register_blueprint(prompts.bp)
     app.register_blueprint(admin.bp)
     app.register_blueprint(user.bp)
+    app.register_blueprint(ai.bp)
 

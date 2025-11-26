@@ -157,6 +157,15 @@ endblock %} {% block styles %}
             <i class="bi bi-shield-lock me-2"></i>安全设置
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <a
+            class="nav-link"
+            href="{{ url_for('user.ai_settings') }}"
+            role="tab"
+          >
+            <i class="bi bi-robot me-2"></i>AI 设置
+          </a>
+        </li>
       </ul>
 
       <div class="tab-content" id="profileTabContent">
@@ -411,6 +420,22 @@ endblock %} {% block styles %}
       if (securityTab) {
         const tab = new bootstrap.Tab(securityTab);
         tab.show();
+      }
+    });
+  }
+
+  // 如果从 AI 设置页面返回，高亮 AI 设置标签
+  if (urlParams.get("from") === "ai-settings") {
+    document.addEventListener("DOMContentLoaded", function () {
+      const aiSettingsLink = document.querySelector('a[href*="ai-settings"]');
+      if (aiSettingsLink) {
+        aiSettingsLink.classList.add("active");
+        // 移除其他标签的 active 状态
+        document.querySelectorAll(".nav-link").forEach((link) => {
+          if (link !== aiSettingsLink && !link.href) {
+            link.classList.remove("active");
+          }
+        });
       }
     });
   }

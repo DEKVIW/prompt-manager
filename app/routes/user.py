@@ -1,12 +1,14 @@
 """
 用户相关路由
 """
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.database import get_db
 from app.utils.decorators import login_required
 from app.utils.helpers import format_datetime
 from app.utils.file_upload import save_avatar
+from app.utils.encryption import encrypt_string, decrypt_string
+from app.services.ai.factory import AIClientFactory
 from flask import current_app
 import datetime
 
@@ -191,4 +193,116 @@ def edit_profile():
     
     now = datetime.datetime.now()
     return render_template('user/edit_profile.html', user=user, now=now)
+
+
+@bp.route('/ai-settings', methods=['GET', 'POST'])
+@login_required
+def ai_settings():
+    """AI 设置页面"""
+    user_id = session['user_id']
+    db = get_db()
+    
+    # 获取现有配置
+    config = db.execute(
+        'SELECT * FROM ai_configs WHERE user_id = ?',
+        (user_id,)
+    ).fetchone()
+    
+    if request.method == 'POST':
+        provider = request.form.get('provider', 'openai')
+        api_key = request.form.get('api_key', '').strip()
+        base_url = request.form.get('base_url', '').strip() or None
+        model = request.form.get('model', 'gpt-3.5-turbo')
+        temperature = float(request.form.get('temperature', 0.7))
+        max_tokens = int(request.form.get('max_tokens', 500))
+        enabled = 'enabled' in request.form
+        
+        error = None
+        
+        # 处理 API Key：
+        # - 如果已有配置且用户未输入新 key（留空），则保留原 key
+        # - 如果用户输入了新 key，则加密保存新 key
+        # - 如果是新配置，必须提供 API Key
+        if config:
+            # 已有配置：留空则保留原 key，有输入则更新
+            if not api_key or api_key.strip() == '':
+                # 用户未输入新 key，保留原有的加密 key
+                encrypted_api_key = config['api_key']
+            else:
+                # 用户输入了新的 key，加密并保存
+                encrypted_api_key = encrypt_string(api_key)
+        else:
+            # 新配置，必须提供 API Key
+            if not api_key or api_key.strip() == '':
+                error = 'API Key 不能为空'
+            else:
+                encrypted_api_key = encrypt_string(api_key)
+        
+        # 验证其他字段
+        if not error and provider == 'custom' and not base_url:
+            error = '自定义 API 必须提供基础 URL'
+        elif title_max_length < 5 or title_max_length > 100:
+            error = '标题最大字数应在 5-100 之间'
+        elif description_max_length < 10 or description_max_length > 500:
+            error = '描述最大字数应在 10-500 之间'
+        elif tag_count < 1 or tag_count > 20:
+            error = '标签总数应在 1-20 之间'
+        elif tag_two_char_count < 0 or tag_four_char_count < 0:
+            error = '标签个数不能为负数'
+        elif tag_two_char_count + tag_four_char_count > tag_count:
+            error = '两字标签和四字标签的总数不能超过标签总数'
+        
+        if error:
+            flash(error, 'danger')
+        else:
+            try:
+                # encrypted_api_key 已在上面处理
+                if config:
+                    # 更新现有配置（不再更新生成规则配置字段）
+                    db.execute('''
+                        UPDATE ai_configs SET
+                            provider = ?, api_key = ?, base_url = ?, model = ?,
+                            temperature = ?, max_tokens = ?, enabled = ?,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE user_id = ?
+                    ''', (
+                        provider, encrypted_api_key, base_url, model,
+                        temperature, max_tokens, enabled,
+                        user_id
+                    ))
+                else:
+                    # 创建新配置（使用默认值）
+                    db.execute('''
+                        INSERT INTO ai_configs (
+                            user_id, provider, api_key, base_url, model,
+                            temperature, max_tokens, enabled
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        user_id, provider, encrypted_api_key, base_url, model,
+                        temperature, max_tokens, enabled
+                    ))
+                
+                db.commit()
+                flash('AI 设置已保存', 'success')
+                return redirect(url_for('user.ai_settings'))
+                
+            except Exception as e:
+                db.rollback()
+                current_app.logger.error(f'保存 AI 设置失败: {str(e)}')
+                flash(f'保存失败: {str(e)}', 'danger')
+    
+    # 准备显示数据（解密 API Key 用于显示，但只显示部分）
+    config_dict = dict(config) if config else None
+    if config_dict and config_dict.get('api_key'):
+        try:
+            decrypted_key = decrypt_string(config_dict['api_key'])
+            # 只显示前4位和后4位，中间用*代替
+            if len(decrypted_key) > 8:
+                config_dict['api_key_display'] = decrypted_key[:4] + '*' * (len(decrypted_key) - 8) + decrypted_key[-4:]
+            else:
+                config_dict['api_key_display'] = '*' * len(decrypted_key)
+        except Exception:
+            config_dict['api_key_display'] = '已配置（无法显示）'
+    
+    return render_template('user/ai_settings.html', config=config_dict)
 

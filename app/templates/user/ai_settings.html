@@ -1,0 +1,368 @@
+{% extends 'base.html' %} {% block title %}AI 设置 - 提示词管理平台{% endblock %} {% block styles %}
+<style>
+  .ai-settings-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 15px;
+  }
+
+  .settings-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    background: white;
+  }
+
+  .settings-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .settings-body {
+    padding: 2rem;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--light-bg);
+  }
+
+  .form-section:last-child {
+    border-bottom: none;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .section-title i {
+    font-size: 1.1rem;
+  }
+
+
+  .form-text {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .advanced-settings {
+    display: none;
+  }
+
+  .advanced-settings.show {
+    display: block;
+  }
+
+  .test-connection-btn {
+    margin-left: 0.5rem;
+  }
+
+  .api-key-status {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+  }
+
+  .api-key-status.configured {
+    background-color: #d4edda;
+    color: #155724;
+  }
+
+  @media (max-width: 768px) {
+    .ai-settings-container {
+      margin: 1rem auto;
+      padding: 0 10px;
+    }
+
+    .settings-body {
+      padding: 1.5rem;
+    }
+
+    .form-section {
+      margin-bottom: 1.5rem;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container mt-4 mb-5">
+  <div class="ai-settings-container">
+    <div class="card settings-card">
+      <div class="settings-header">
+        <h2 class="m-0">
+          <i class="bi bi-robot me-2"></i>AI 自动填充设置
+        </h2>
+        <p class="mb-0 mt-2" style="opacity: 0.9; font-size: 0.9rem">
+          配置 AI API 以启用自动生成标题、描述和标签功能
+        </p>
+      </div>
+
+      <div class="settings-body">
+        <form method="POST" id="aiSettingsForm">
+          <!-- AI 提供商配置 -->
+          <div class="form-section">
+            <h5 class="section-title">
+              <i class="bi bi-cloud"></i>AI 提供商配置
+            </h5>
+
+            <div class="mb-3">
+              <label for="provider" class="form-label fw-bold">AI 提供商</label>
+              <select class="form-select" id="provider" name="provider" required>
+                <option value="openai" {% if config and config.provider == 'openai' %}selected{% endif %}>
+                  OpenAI (GPT-3.5/GPT-4)
+                </option>
+                <option value="custom" {% if config and config.provider == 'custom' %}selected{% endif %}>
+                  自定义 API (兼容 OpenAI 格式)
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="api_key" class="form-label fw-bold">
+                API Key
+                {% if config and config.api_key %}
+                <span class="badge bg-success ms-2">已配置</span>
+                {% endif %}
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="api_key"
+                name="api_key"
+                placeholder="{% if config and config.api_key %}留空保持原 Key，或输入新 Key 进行更新{% else %}输入您的 API Key{% endif %}"
+                value=""
+                autocomplete="off"
+              />
+              {% if config and config.api_key %}
+              <div class="form-text text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                已配置 API Key，留空将保持原 Key 不变
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3" id="baseUrlGroup" style="display: {% if config and config.provider == 'custom' %}block{% else %}none{% endif %};">
+              <label for="base_url" class="form-label fw-bold">基础 URL</label>
+              <input
+                type="url"
+                class="form-control"
+                id="base_url"
+                name="base_url"
+                placeholder="https://api.openai.com/v1"
+                value="{% if config and config.base_url %}{{ config.base_url }}{% endif %}"
+              />
+              <div class="form-text">
+                自定义 API 的基础 URL（兼容 OpenAI 格式）
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="model" class="form-label fw-bold">模型</label>
+              <input
+                type="text"
+                class="form-control"
+                id="model"
+                name="model"
+                placeholder="gpt-3.5-turbo"
+                value="{% if config and config.model %}{{ config.model }}{% else %}gpt-3.5-turbo{% endif %}"
+                required
+              />
+              <div class="form-text">
+                例如：gpt-3.5-turbo, gpt-4, gpt-4-turbo
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <button type="button" class="btn btn-outline-primary btn-sm" id="testConnectionBtn">
+                <i class="bi bi-wifi me-1"></i>测试连接
+              </button>
+              <span id="testResult" class="ms-2"></span>
+            </div>
+          </div>
+
+          <!-- 高级设置 -->
+          <div class="form-section">
+            <h5 class="section-title">
+              <i class="bi bi-sliders"></i>
+              <span>高级设置</span>
+              <button
+                type="button"
+                class="btn btn-link btn-sm p-0 ms-2"
+                id="toggleAdvanced"
+                style="text-decoration: none; color: var(--text-muted)"
+              >
+                <i class="bi bi-chevron-down" id="toggleAdvancedIcon"></i>
+              </button>
+            </h5>
+
+            <div class="advanced-settings" id="advancedSettings">
+              <div class="mb-3">
+                <label for="temperature" class="form-label fw-bold">温度 (Temperature)</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="temperature"
+                  name="temperature"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value="{% if config and config.temperature %}{{ config.temperature }}{% else %}0.7{% endif %}"
+                />
+                <div class="form-text">控制输出的随机性，范围 0.0-2.0，默认 0.7</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="max_tokens" class="form-label fw-bold">最大 Token 数</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="max_tokens"
+                  name="max_tokens"
+                  min="100"
+                  max="2000"
+                  value="{% if config and config.max_tokens %}{{ config.max_tokens }}{% else %}500{% endif %}"
+                />
+                <div class="form-text">生成内容的最大长度，范围 100-2000，默认 500</div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- 启用开关 -->
+          <div class="form-section">
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="enabled"
+                name="enabled"
+                {% if not config or config.enabled %}checked{% endif %}
+              />
+              <label class="form-check-label fw-bold" for="enabled">
+                启用 AI 自动填充功能
+              </label>
+            </div>
+          </div>
+
+          <!-- 提交按钮 -->
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('user.edit_profile') }}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-2"></i>返回设置
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-2"></i>保存设置
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const providerSelect = document.getElementById("provider");
+    const baseUrlGroup = document.getElementById("baseUrlGroup");
+    const toggleAdvanced = document.getElementById("toggleAdvanced");
+    const advancedSettings = document.getElementById("advancedSettings");
+    const apiKeyInput = document.getElementById("api_key");
+    const testConnectionBtn = document.getElementById("testConnectionBtn");
+    const testResult = document.getElementById("testResult");
+
+    // 切换提供商时显示/隐藏基础 URL
+    providerSelect.addEventListener("change", function () {
+      if (this.value === "custom") {
+        baseUrlGroup.style.display = "block";
+        document.getElementById("base_url").required = true;
+      } else {
+        baseUrlGroup.style.display = "none";
+        document.getElementById("base_url").required = false;
+      }
+    });
+
+    // 切换高级设置显示/隐藏
+    toggleAdvanced.addEventListener("click", function () {
+      advancedSettings.classList.toggle("show");
+      const icon = document.getElementById("toggleAdvancedIcon");
+      if (advancedSettings.classList.contains("show")) {
+        icon.classList.remove("bi-chevron-down");
+        icon.classList.add("bi-chevron-up");
+      } else {
+        icon.classList.remove("bi-chevron-up");
+        icon.classList.add("bi-chevron-down");
+      }
+    });
+
+
+    // 测试连接
+    testConnectionBtn.addEventListener("click", async function () {
+      const provider = providerSelect.value;
+      const apiKey = apiKeyInput.value.trim(); // 可以为空，后端会使用已保存的 key
+      const baseUrl = document.getElementById("base_url").value.trim() || null;
+      const model = document.getElementById("model").value.trim();
+
+      testConnectionBtn.disabled = true;
+      testConnectionBtn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-1"></span>测试中...';
+      testResult.innerHTML = "";
+
+      try {
+        const response = await fetch("/api/ai/test-connection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider: provider,
+            api_key: apiKey,
+            base_url: baseUrl,
+            model: model,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          testResult.innerHTML =
+            '<span class="text-success"><i class="bi bi-check-circle me-1"></i>连接成功</span>';
+        } else {
+          testResult.innerHTML =
+            '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>' +
+            (data.message || "连接失败") +
+            "</span>";
+        }
+      } catch (error) {
+        testResult.innerHTML =
+          '<span class="text-danger"><i class="bi bi-x-circle me-1"></i>网络错误</span>';
+      } finally {
+        testConnectionBtn.disabled = false;
+        testConnectionBtn.innerHTML = '<i class="bi bi-wifi me-1"></i>测试连接';
+      }
+    });
+
+    // 表单验证
+    const form = document.getElementById("aiSettingsForm");
+    form.addEventListener("submit", function (e) {
+      const tagCount = parseInt(document.getElementById("tag_count").value);
+      const tagTwoChar = parseInt(document.getElementById("tag_two_char_count").value);
+      const tagFourChar = parseInt(document.getElementById("tag_four_char_count").value);
+
+      if (tagTwoChar + tagFourChar > tagCount) {
+        e.preventDefault();
+        alert("两字标签和四字标签的总数不能超过标签总数！");
+        return false;
+      }
+    });
+  });
+</script>
+{% endblock %}
+

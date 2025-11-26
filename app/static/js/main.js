@@ -194,47 +194,91 @@ function fallbackCopyToClipboard(text, button, originalText) {
 }
 
 /**
- * 显示Toast提示消息
+ * 显示Toast提示消息（不占据页面布局）
+ * @param {string} message - 消息内容
+ * @param {string} type - 消息类型：success, danger, warning, info
+ * @param {number} duration - 显示时长（毫秒），默认3000，0表示不自动关闭
  */
-function showToast(message, type = "success") {
-  // 移除之前的Toast
-  const oldToasts = document.querySelectorAll(".toast-container");
-  oldToasts.forEach((toast) => toast.remove());
-
-  // 创建新的Toast
-  const toastContainer = document.createElement("div");
-  toastContainer.className =
-    "toast-container position-fixed bottom-0 start-50 translate-middle-x p-3";
-  toastContainer.style.zIndex = "9999";
-
-  let bgColor = "bg-success";
-  let icon = "bi-check-circle";
-
-  if (type === "warning") {
-    bgColor = "bg-warning";
-    icon = "bi-exclamation-triangle";
-  } else if (type === "danger") {
-    bgColor = "bg-danger";
-    icon = "bi-exclamation-circle";
+function showToastNotification(message, type = "success", duration = 3000) {
+  const container = document.getElementById("toast-container");
+  if (!container) {
+    console.error("Toast container not found");
+    return;
   }
 
-  toastContainer.innerHTML = `
-    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header ${bgColor} text-white">
-        <i class="bi ${icon} me-2"></i>
-        <strong class="me-auto">提示</strong>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body">${message}</div>
-    </div>
+  // 创建 Toast 元素
+  const toast = document.createElement("div");
+  toast.className = `toast-notification toast-${type}`;
+  toast.setAttribute("role", "alert");
+  toast.setAttribute("aria-live", "assertive");
+
+  // 根据类型设置图标
+  let icon = "bi-info-circle";
+  if (type === "success") {
+    icon = "bi-check-circle";
+  } else if (type === "danger") {
+    icon = "bi-exclamation-circle";
+  } else if (type === "warning") {
+    icon = "bi-exclamation-triangle";
+  }
+
+  // 设置内容
+  toast.innerHTML = `
+    <i class="bi ${icon} toast-icon"></i>
+    <div class="toast-message">${escapeHtml(message)}</div>
+    <button type="button" class="toast-close" aria-label="关闭">
+      <i class="bi bi-x"></i>
+    </button>
   `;
 
-  document.body.appendChild(toastContainer);
+  // 添加到容器
+  container.appendChild(toast);
 
-  // 2秒后自动移除
+  // 关闭按钮事件
+  const closeBtn = toast.querySelector(".toast-close");
+  closeBtn.addEventListener("click", () => {
+    removeToast(toast);
+  });
+
+  // 自动关闭
+  if (duration > 0) {
+    setTimeout(() => {
+      removeToast(toast);
+    }, duration);
+  }
+
+  return toast;
+}
+
+/**
+ * 移除 Toast 通知
+ */
+function removeToast(toast) {
+  if (!toast || !toast.parentNode) return;
+
+  toast.classList.add("toast-fade-out");
   setTimeout(() => {
-    toastContainer.remove();
-  }, 2000);
+    if (toast.parentNode) {
+      toast.remove();
+    }
+  }, 300);
+}
+
+/**
+ * HTML 转义函数
+ */
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/**
+ * 显示Toast提示消息（兼容旧版本）
+ * @deprecated 使用 showToastNotification 代替
+ */
+function showToast(message, type = "success") {
+  showToastNotification(message, type, 2000);
 }
 
 /**
