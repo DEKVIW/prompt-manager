@@ -23,36 +23,72 @@ def login():
         error = None
         db = get_db()
         
+        current_app.logger.info(f"用户登录尝试，输入: {email}")
+        
         if not email:
             error = '请输入邮箱'
+            current_app.logger.warning("登录失败：未输入邮箱")
         elif not password:
             error = '请输入密码'
+            current_app.logger.warning("登录失败：未输入密码")
         
         if not error:
-            user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+            user = None
             
-            if not user:
-                error = '用户不存在'
-            elif user['is_banned']:
-                error = '账号已被禁用，请联系管理员'
+            # 1. 优先尝试LDAP认证
+            from app.services.ldap_service import authenticate_ldap_user, create_or_update_ldap_user
+            current_app.logger.debug("尝试LDAP认证")
+            ldap_success, ldap_user_info = authenticate_ldap_user(email, password)
+            
+            if ldap_success:
+                current_app.logger.info("LDAP认证成功")
+                # LDAP认证成功，创建或更新本地用户
+                user = create_or_update_ldap_user(ldap_user_info)
+                current_app.logger.info(f"成功创建或更新本地用户: {user['username']} (ID: {user['id']})")
             else:
-                try:
-                    if check_password_hash(user['password_hash'], password):
-                        session.clear()
-                        session['user_id'] = user['id']
-                        session['username'] = user['username']
-                        session['is_admin'] = user['is_admin']
-                        if user['avatar_url']:
-                            session['avatar_url'] = user['avatar_url']
-                        
-                        return redirect(url_for('main.index'))
-                    else:
-                        error = '密码错误'
-                except Exception as e:
-                    current_app.logger.error(f"密码验证过程中出错: {str(e)}")
-                    error = '登录过程中出现错误'
+                current_app.logger.debug("LDAP认证失败，尝试本地数据库认证")
+                # 2. LDAP认证失败，尝试本地数据库认证
+                user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+                
+                if user:
+                    current_app.logger.debug(f"找到本地用户: {user['username']} (ID: {user['id']})")
+                    try:
+                        if not check_password_hash(user['password_hash'], password):
+                            user = None
+                            error = '密码错误'
+                            current_app.logger.warning("本地认证失败：密码错误")
+                        else:
+                            current_app.logger.debug("本地认证成功")
+                    except Exception as e:
+                        current_app.logger.error(f"密码验证过程中出错: {str(e)}")
+                        error = '登录过程中出现错误'
+                        user = None
+                else:
+                    error = '用户不存在'
+                    current_app.logger.warning("本地认证失败：用户不存在")
+            
+            if user:
+                current_app.logger.debug(f"用户认证成功，检查状态: {user['username']} (ID: {user['id']})")
+                if user['is_banned']:
+                    error = '账号已被禁用，请联系管理员'
+                    current_app.logger.warning(f"登录失败：账号已被禁用 - {user['username']}")
+                elif not user['is_approved']:
+                    error = '账号待审核，请联系管理员'
+                    current_app.logger.info(f"登录失败：账号待审核 - {user['username']}")
+                else:
+                    # 登录成功
+                    session.clear()
+                    session['user_id'] = user['id']
+                    session['username'] = user['username']
+                    session['is_admin'] = user['is_admin']
+                    if user['avatar_url']:
+                        session['avatar_url'] = user['avatar_url']
+                    
+                    current_app.logger.info(f"登录成功：{user['username']} (ID: {user['id']})")
+                    return redirect(url_for('main.index'))
         
         flash(error, 'danger')
+        current_app.logger.warning(f"登录失败：{error} - {email}")
     
     now = datetime.datetime.now()
     return render_template('auth/login.html', now=now)
@@ -104,28 +140,15 @@ def register():
         if error:
             flash(error, 'danger')
         else:
-            is_admin = db.execute('SELECT COUNT(*) as count FROM users').fetchone()['count'] == 0
-            password_hash = generate_password_hash(password, method='pbkdf2:sha256')
+            # 使用user_service中的register_user函数
+            from app.services.user_service import register_user
+            user_id, register_error = register_user(username, email, password, invite_code)
             
-            try:
-                db.execute(
-                    'INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)',
-                    (username, email, password_hash, is_admin)
-                )
-                user_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]
-                
-                db.execute(
-                    'UPDATE invite_codes SET is_used = 1, used_at = CURRENT_TIMESTAMP, used_by = ? WHERE code = ?',
-                    (user_id, invite_code)
-                )
-                
-                db.commit()
+            if register_error:
+                flash(register_error, 'danger')
+            else:
                 flash('注册成功！现在您可以登录了', 'success')
                 return redirect(url_for('auth.login'))
-            except Exception as e:
-                db.rollback()
-                current_app.logger.error(f"注册用户时出错: {str(e)}")
-                flash('注册过程中出现错误', 'danger')
     
     return render_template('auth/register.html')
 

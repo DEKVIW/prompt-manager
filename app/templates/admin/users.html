@@ -76,6 +76,44 @@
     background-color: #e53935;
   }
 
+  /* 审核按钮样式 */
+  .approve-btn {
+    background-color: #2196f3;
+    color: white;
+  }
+
+  .approve-btn:hover {
+    background-color: #1976d2;
+  }
+
+  .reject-btn {
+    background-color: #9c27b0;
+    color: white;
+  }
+
+  .reject-btn:hover {
+    background-color: #7b1fa2;
+  }
+
+  /* 管理员按钮样式 */
+  .set-admin-btn {
+    background-color: #ff5722;
+    color: white;
+  }
+
+  .set-admin-btn:hover {
+    background-color: #e64a19;
+  }
+
+  .remove-admin-btn {
+    background-color: #607d8b;
+    color: white;
+  }
+
+  .remove-admin-btn:hover {
+    background-color: #455a64;
+  }
+
   /* 按钮组样式 */
   .admin-action-group {
     display: flex;
@@ -222,8 +260,9 @@
                     {% endif %}
                   </td>
                   <td>
-                    {% if not user.is_admin %}
                     <div class="admin-action-group">
+                      <!-- 封禁/解封按钮 - 只对普通用户显示 -->
+                      {% if not user.is_admin %}
                       <form
                         action="/admin/users/ban/{{ user.id }}"
                         method="post"
@@ -248,6 +287,64 @@
                         </button>
                         {% endif %}
                       </form>
+                      {% endif %}
+                      
+                      <!-- 审核按钮 - 只对普通用户显示 -->
+                      {% if not user.is_admin %}
+                      <form
+                        action="/admin/users/approve/{{ user.id }}"
+                        method="post"
+                      >
+                        {% if user.is_approved %}
+                        <input type="hidden" name="is_approved" value="0" />
+                        <button
+                          type="submit"
+                          class="action-btn reject-btn"
+                          onclick="return confirm('确定要拒绝此用户吗？')"
+                        >
+                          <i class="bi bi-x-circle"></i> 拒绝
+                        </button>
+                        {% else %}
+                        <input type="hidden" name="is_approved" value="1" />
+                        <button
+                          type="submit"
+                          class="action-btn approve-btn"
+                          onclick="return confirm('确定要通过此用户的审核吗？')"
+                        >
+                          <i class="bi bi-check-circle"></i> 通过
+                        </button>
+                        {% endif %}
+                      </form>
+                      {% endif %}
+                      
+                      <!-- 管理员设置按钮 - 对所有用户显示，但根据情况显示不同按钮 -->
+                      <form
+                        action="/admin/users/set-admin/{{ user.id }}"
+                        method="post"
+                      >
+                        {% if user.is_admin %}
+                        <input type="hidden" name="is_admin" value="0" />
+                        <button
+                          type="submit"
+                          class="action-btn remove-admin-btn"
+                          onclick="return confirm('确定要将此用户从管理员移除吗？')"
+                        >
+                          <i class="bi bi-shield-x"></i> 移除管理员
+                        </button>
+                        {% else %}
+                        <input type="hidden" name="is_admin" value="1" />
+                        <button
+                          type="submit"
+                          class="action-btn set-admin-btn"
+                          onclick="return confirm('确定要将此用户设置为管理员吗？')"
+                        >
+                          <i class="bi bi-shield-check"></i> 设置管理员
+                        </button>
+                        {% endif %}
+                      </form>
+                      
+                      <!-- 删除按钮 - 只对普通用户显示 -->
+                      {% if not user.is_admin %}
                       <form
                         action="/admin/users/delete/{{ user.id }}"
                         method="post"
@@ -260,15 +357,13 @@
                           <i class="bi bi-trash"></i> 删除
                         </button>
                       </form>
+                      {% endif %}
                     </div>
-                    {% else %}
-                    <span class="text-muted">无操作</span>
-                    {% endif %}
                   </td>
                 </tr>
                 {% else %}
                 <tr>
-                  <td colspan="7" class="text-center">暂无用户</td>
+                  <td colspan="8" class="text-center">暂无用户</td>
                 </tr>
                 {% endfor %}
               </tbody>

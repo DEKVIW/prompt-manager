@@ -10,22 +10,40 @@ from werkzeug.utils import secure_filename
 
 def authenticate_user(email, password):
     """验证用户登录"""
+    from flask import current_app
     db = get_db()
-    user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    user = None
     
-    if not user:
-        return None, '用户不存在'
+    # 1. 优先尝试LDAP认证
+    from app.services.ldap_service import authenticate_ldap_user, create_or_update_ldap_user
+    ldap_success, ldap_user_info = authenticate_ldap_user(email, password)
     
-    if user['is_banned']:
-        return None, '账号已被禁用，请联系管理员'
-    
-    try:
-        if check_password_hash(user['password_hash'], password):
-            return dict(user), None
+    if ldap_success:
+        # LDAP认证成功，创建或更新本地用户
+        user = create_or_update_ldap_user(ldap_user_info)
+    else:
+        # 2. LDAP认证失败，尝试本地数据库认证
+        user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+        
+        if user:
+            try:
+                if not check_password_hash(user['password_hash'], password):
+                    user = None
+                    return None, '密码错误'
+            except Exception as e:
+                return None, f'登录过程中出现错误: {str(e)}'
         else:
-            return None, '密码错误'
-    except Exception as e:
-        return None, f'登录过程中出现错误: {str(e)}'
+            return None, '用户不存在'
+    
+    if user:
+        if user['is_banned']:
+            return None, '账号已被禁用，请联系管理员'
+        elif not user['is_approved']:
+            return None, '账号待审核，请联系管理员'
+        else:
+            return dict(user), None
+    
+    return None, '用户不存在'
 
 
 def register_user(username, email, password, invite_code):
@@ -45,14 +63,15 @@ def register_user(username, email, password, invite_code):
     if not invite:
         return None, '无效的邀请码'
     
-    # 检查是否是第一个用户（自动设为管理员）
+    # 检查是否是第一个用户（自动设为管理员和已审核）
     is_admin = db.execute('SELECT COUNT(*) as count FROM users').fetchone()['count'] == 0
+    is_approved = is_admin  # 管理员自动审核通过
     password_hash = generate_password_hash(password, method='pbkdf2:sha256')
     
     try:
         db.execute(
-            'INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)',
-            (username, email, password_hash, is_admin)
+            'INSERT INTO users (username, email, password_hash, is_admin, is_approved) VALUES (?, ?, ?, ?, ?)',
+            (username, email, password_hash, is_admin, is_approved)
         )
         user_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]
         

@@ -125,3 +125,41 @@ def delete_user(user_id):
         db.rollback()
         raise Exception(f'删除用户时出错: {str(e)}')
 
+
+def approve_user(user_id, is_approved):
+    """审核用户"""
+    db = get_db()
+    
+    user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not user:
+        raise ValueError('用户不存在')
+    
+    # 管理员账号不需要审核
+    if user['is_admin']:
+        raise PermissionError('不能审核管理员账号')
+    
+    db.execute('UPDATE users SET is_approved = ? WHERE id = ?', (is_approved, user_id))
+    db.commit()
+    
+    return dict(user)
+
+
+def set_admin(user_id, is_admin):
+    """设置用户为管理员或普通用户"""
+    db = get_db()
+    
+    user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    if not user:
+        raise ValueError('用户不存在')
+    
+    # 至少保留一个管理员
+    if not is_admin:
+        admin_count = db.execute('SELECT COUNT(*) as count FROM users WHERE is_admin = 1').fetchone()['count']
+        if admin_count <= 1:
+            raise PermissionError('至少需要保留一个管理员账号')
+    
+    db.execute('UPDATE users SET is_admin = ? WHERE id = ?', (is_admin, user_id))
+    db.commit()
+    
+    return dict(user)
+
