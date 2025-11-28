@@ -150,3 +150,72 @@ def delete_user(id):
     
     return redirect(url_for('admin.users'))
 
+
+@bp.route('/users/approve/<int:id>', methods=['POST'])
+@admin_required
+def approve_user(id):
+    """审核用户"""
+    db = get_db()
+    
+    user = db.execute('SELECT * FROM users WHERE id = ?', (id,)).fetchone()
+    if not user:
+        flash('用户不存在', 'danger')
+        return redirect(url_for('admin.users'))
+    
+    if user['is_admin']:
+        flash('不能审核管理员账号', 'danger')
+        return redirect(url_for('admin.users'))
+    
+    is_approved = request.form.get('is_approved') == '1'
+    
+    try:
+        db.execute('UPDATE users SET is_approved = ? WHERE id = ?', (is_approved, id))
+        db.commit()
+        
+        if is_approved:
+            flash(f'用户 {user["username"]} 已通过审核', 'success')
+        else:
+            flash(f'用户 {user["username"]} 已被拒绝', 'success')
+    except Exception as e:
+        db.rollback()
+        current_app.logger.error(f'审核用户时出错: {str(e)}')
+        flash(f'审核用户时出错: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.users'))
+
+
+@bp.route('/users/set-admin/<int:id>', methods=['POST'])
+@admin_required
+def set_admin(id):
+    """设置用户为管理员或普通用户"""
+    db = get_db()
+    
+    user = db.execute('SELECT * FROM users WHERE id = ?', (id,)).fetchone()
+    if not user:
+        flash('用户不存在', 'danger')
+        return redirect(url_for('admin.users'))
+    
+    is_admin = request.form.get('is_admin') == '1'
+    
+    try:
+        # 至少保留一个管理员
+        if not is_admin:
+            admin_count = db.execute('SELECT COUNT(*) as count FROM users WHERE is_admin = 1').fetchone()['count']
+            if admin_count <= 1:
+                flash('至少需要保留一个管理员账号', 'danger')
+                return redirect(url_for('admin.users'))
+        
+        db.execute('UPDATE users SET is_admin = ? WHERE id = ?', (is_admin, id))
+        db.commit()
+        
+        if is_admin:
+            flash(f'用户 {user["username"]} 已设置为管理员', 'success')
+        else:
+            flash(f'用户 {user["username"]} 已设置为普通用户', 'success')
+    except Exception as e:
+        db.rollback()
+        current_app.logger.error(f'设置管理员时出错: {str(e)}')
+        flash(f'设置管理员时出错: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.users'))
+

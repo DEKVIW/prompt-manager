@@ -49,6 +49,7 @@ def init_db():
             password_hash TEXT NOT NULL,
             is_admin BOOLEAN DEFAULT 0,
             is_banned BOOLEAN DEFAULT 0,
+            is_approved BOOLEAN DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         ''')
