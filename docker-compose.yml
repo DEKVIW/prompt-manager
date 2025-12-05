@@ -15,6 +15,7 @@ services:
       - ./instance:/app/instance
       - ./logs:/app/logs
       - ./uploads:/app/app/static/img/avatars
+      - ./.env:/app/.env
     environment:
       - SECRET_KEY=${SECRET_KEY:-change_this_to_a_random_string}
       - FLASK_DEBUG=false
