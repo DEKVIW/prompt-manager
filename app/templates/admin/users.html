@@ -23,18 +23,20 @@
   .action-btn {
     border-radius: 6px;
     font-weight: 500;
-    padding: 0.35rem 0.75rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
     transition: all 0.3s ease;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 3px;
     border: none;
+    min-width: auto;
   }
 
   .action-btn i {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
   }
 
   .action-btn:hover {
@@ -76,10 +78,51 @@
     background-color: #e53935;
   }
 
+  /* 审核按钮样式 */
+  .approve-btn {
+    background-color: #2196f3;
+    color: white;
+  }
+
+  .approve-btn:hover {
+    background-color: #1976d2;
+  }
+
+  .reject-btn {
+    background-color: #9c27b0;
+    color: white;
+  }
+
+  .reject-btn:hover {
+    background-color: #7b1fa2;
+  }
+
+  /* 管理员按钮样式 */
+  .set-admin-btn {
+    background-color: #ff5722;
+    color: white;
+  }
+
+  .set-admin-btn:hover {
+    background-color: #e64a19;
+  }
+
+  .remove-admin-btn {
+    background-color: #607d8b;
+    color: white;
+  }
+
+  .remove-admin-btn:hover {
+    background-color: #455a64;
+  }
+
   /* 按钮组样式 */
   .admin-action-group {
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
   }
 
   /* 移动端优化 */
@@ -222,53 +265,76 @@
                     {% endif %}
                   </td>
                   <td>
-                    {% if not user.is_admin %}
+                    <!-- 待审核用户：仅显示通过和拒绝按钮 -->
+                    {% if not user.is_admin and not user.is_approved %}
                     <div class="admin-action-group">
-                      <form
-                        action="/admin/users/ban/{{ user.id }}"
-                        method="post"
-                      >
-                        {% if user.is_banned %}
-                        <input type="hidden" name="is_banned" value="0" />
-                        <button
-                          type="submit"
-                          class="action-btn unban-btn"
-                          onclick="return confirm('确定要解封此用户吗？')"
-                        >
-                          <i class="bi bi-unlock"></i> 解封
-                        </button>
-                        {% else %}
-                        <input type="hidden" name="is_banned" value="1" />
-                        <button
-                          type="submit"
-                          class="action-btn ban-btn"
-                          onclick="return confirm('确定要封禁此用户吗？这将阻止用户登录。')"
-                        >
-                          <i class="bi bi-lock"></i> 封禁
-                        </button>
-                        {% endif %}
-                      </form>
-                      <form
-                        action="/admin/users/delete/{{ user.id }}"
-                        method="post"
-                      >
-                        <button
-                          type="submit"
-                          class="action-btn delete-btn"
-                          onclick="return confirm('警告：此操作将删除该用户及其所有数据，无法恢复！确定要继续吗？')"
-                        >
-                          <i class="bi bi-trash"></i> 删除
-                        </button>
-                      </form>
+                        <!-- 通过按钮 -->
+                        <form action="/admin/users/approve/{{ user.id }}" method="post">
+                            <input type="hidden" name="is_approved" value="1" />
+                            <button type="submit" class="action-btn approve-btn" onclick="return confirm('确定要通过此用户的审核吗？')">
+                                <i class="bi bi-check-circle"></i> 通过
+                            </button>
+                        </form>
+                        <!-- 拒绝按钮 -->
+                        <form action="/admin/users/ban/{{ user.id }}" method="post">
+                            <input type="hidden" name="is_banned" value="1" />
+                            <button type="submit" class="action-btn ban-btn" onclick="return confirm('确定要拒绝此用户吗？')">
+                                <i class="bi bi-x-circle"></i> 拒绝
+                            </button>
+                        </form>
                     </div>
-                    {% else %}
-                    <span class="text-muted">无操作</span>
+                    {% endif %}
+                    
+                    <!-- 已审核用户：显示封禁/解封、管理员设置、删除按钮 -->
+                    {% if not user.is_admin and user.is_approved %}
+                    <div class="admin-action-group">
+                        <!-- 封禁/解封按钮 -->
+                        <form action="/admin/users/ban/{{ user.id }}" method="post">
+                            {% if user.is_banned %}
+                            <input type="hidden" name="is_banned" value="0" />
+                            <button type="submit" class="action-btn unban-btn" onclick="return confirm('确定要解封此用户吗？')">
+                                <i class="bi bi-unlock"></i> 解封
+                            </button>
+                            {% else %}
+                            <input type="hidden" name="is_banned" value="1" />
+                            <button type="submit" class="action-btn ban-btn" onclick="return confirm('确定要封禁此用户吗？')">
+                                <i class="bi bi-lock"></i> 封禁
+                            </button>
+                            {% endif %}
+                        </form>
+                        <!-- 管理员设置按钮 -->
+                        <form action="/admin/users/set-admin/{{ user.id }}" method="post">
+                            <input type="hidden" name="is_admin" value="1" />
+                            <button type="submit" class="action-btn set-admin-btn" onclick="return confirm('确定要将此用户设置为管理员吗？')">
+                                <i class="bi bi-shield-check"></i> 设为管理员
+                            </button>
+                        </form>
+                        <!-- 删除按钮 -->
+                        <form action="/admin/users/delete/{{ user.id }}" method="post">
+                            <button type="submit" class="action-btn delete-btn" onclick="return confirm('警告：此操作将删除该用户及其所有数据，无法恢复！确定要继续吗？')">
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 管理员用户：仅显示移除管理员按钮 -->
+                    {% if user.is_admin %}
+                    <div class="admin-action-group">
+                        <!-- 移除管理员按钮 -->
+                        <form action="/admin/users/set-admin/{{ user.id }}" method="post">
+                            <input type="hidden" name="is_admin" value="0" />
+                            <button type="submit" class="action-btn remove-admin-btn" onclick="return confirm('确定要将此用户从管理员移除吗？')">
+                                <i class="bi bi-shield-x"></i> 移除管理员
+                            </button>
+                        </form>
+                    </div>
                     {% endif %}
                   </td>
                 </tr>
                 {% else %}
                 <tr>
-                  <td colspan="7" class="text-center">暂无用户</td>
+                  <td colspan="8" class="text-center">暂无用户</td>
                 </tr>
                 {% endfor %}
               </tbody>

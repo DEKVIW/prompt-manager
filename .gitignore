@@ -53,3 +53,5 @@ data/
 *.bak
 
 # 文档和教程（已删除 Git教程.md）
+.env
+.trae
